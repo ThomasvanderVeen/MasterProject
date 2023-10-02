@@ -9,7 +9,7 @@ v_stat = 47
 max_angle_stat = 37
 parameters = {'C': 200e-12, 'g_L': 2e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 2e-9, 'V_T': -50e-3,
               'tau_W': 600e-3, 'b': 8e-12, 'V_R': -58e-3, 'V_cut': -30e-3, 'refrac': 0.00, 'n': 5,
-              'dt': 0.001}
+              'dt': 0.0001}
 t_total = 10
 colors = ['green', 'yellow', 'blue', 'black', 'red']
 

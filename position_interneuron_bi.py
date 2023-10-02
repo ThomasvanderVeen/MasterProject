@@ -5,35 +5,41 @@ from plots import *
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+import pickle
 
-dt = 0.001
+dt = 0.0001
+t_total = 10
+N_steps = round(t_total/dt)
 
-parameters_hair_field = {'N_hairs': 5, 'max_joint_angle': 180, 'min_joint_angle': 70, 'max_angle': 90, 'overlap': 4}
+file = open('simulation_data', 'rb')
+data = pickle.load(file)
+file.close()
+
+y = data[f'simulation_0'][0][:1000]
+x = np.linspace(0, t_total, num=y.shape[0])
+xvals = np.linspace(0, t_total, num=N_steps)
+joint_angle = np.interp(xvals, x, y)
+
+parameters_hair_field = {'N_hairs': 5, 'max_joint_angle': np.max(joint_angle), 'min_joint_angle': np.min(joint_angle),
+                         'max_angle': 90, 'overlap': 4, 'overlap_bi': 18}
 hair_field = HairField(parameters_hair_field)
-hair_field.get_receptive_field()
-hair_field_2 = HairField(parameters_hair_field)
-hair_field_2.receptive_field = parameters_hair_field['max_joint_angle']-hair_field.receptive_field
+hair_field.get_binary_receptive_field()
 
 parameters_AdEx = {'C': 200e-12, 'g_L': 2e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 2e-9, 'V_T': -50e-3,
-              'tau_W': 6e-3, 'b': 8e-12, 'V_R': -58e-3, 'V_cut': -30e-3, 'refrac': 0.00, 'n': 10,
-              'dt': dt}
+                   'tau_W': 6e-3, 'b': 8e-12, 'V_R': -58e-3, 'V_cut': -30e-3, 'refrac': 0.00, 'n': 10,
+                   'dt': dt}
 
 neuron = AdEx(parameters_AdEx)
 neuron.initialize_state()
 
-parameters_LIF = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 50e-3, 'tau_W': 10e-3, 'tau_epsp': 50e-3, 'b': 15e-3, 'V_R': -70e-3, 'n': 1, 'N_input': 10, 'dt': dt, 'refrac': 0}
+parameters_LIF = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 50e-3, 'tau_W': 10e-3, 'tau_epsp': 50e-3, 'b': 15e-3,
+                  'V_R': -70e-3, 'n': 1, 'N_input': 10, 'dt': dt, 'refrac': 0}
 lif = LIF(parameters_LIF)
 lif.initialize_state()
 lif_2 = LIF(parameters_LIF)
 lif_2.initialize_state()
 
-t_total = 10
-N_steps = round(t_total/dt)
-joint_angle = np.linspace(1, 0.1, num=N_steps)*90*np.sin(np.linspace(1.5*np.pi, 9*np.pi, num=N_steps)) + 90
-hair_angles_1 = hair_field.get_hair_angle(joint_angle)
-hair_angles_2 = hair_field_2.get_hair_angle(joint_angle)
-
-hair_angles = torch.from_numpy(np.hstack((hair_angles_1, hair_angles_2))/37e9)
+hair_angles = hair_field.get_hair_angle(joint_angle)/37e9
 
 voltage, time, spike_list = np.empty(hair_angles.shape), np.array([]), torch.empty(hair_angles.shape)
 voltage_inter, spike_inter = np.empty([N_steps]), np.empty([N_steps])
@@ -54,14 +60,10 @@ for j in [spike_inter, spike_inter_2]:
     ISI = np.diff(spikes)*parameters_LIF['dt']
     firing_rate = 1/ISI
     firing_rate = np.append(firing_rate, firing_rate[-1])
-    firing_rate[firing_rate < 40] = 0
+    firing_rate[firing_rate < 60] = 0
 
     ax1.plot(time[spikes], firing_rate)
 
-ax2.plot(time, joint_angle, color='blue')
-ax2.plot(time, np.full(time.shape, 90), linestyle='dotted', color='black')
+ax2.plot(time, joint_angle, color='black')
+ax2.plot(time, np.full(time.shape, np.max(joint_angle)/2 + np.min(joint_angle)/2), linestyle='dotted', color='black')
 plot_position_interneuron(ax1, ax2, fig, 'bi')
-
-
-
-
