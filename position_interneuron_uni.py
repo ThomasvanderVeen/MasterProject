@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 import pickle
 
-dt = 0.001
+dt = 0.0001
 t_total = 10
 N_steps = round(t_total/dt)
 
@@ -27,8 +27,9 @@ hair_field = HairField(parameters_hair_field)
 hair_field.get_receptive_field()
 hair_angles = hair_field.get_hair_angle(joint_angle)/37e9
 
-parameters_AdEx = {'C': 200e-12, 'g_L': 2e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 2e-9, 'V_T': -50e-3, 'tau_W': 6e-3,
-                   'b': 8e-12, 'V_R': -58e-3, 'V_cut': -30e-3, 'refrac': 0.00, 'n': hair_field.N_hairs, 'dt': dt}
+parameters_AdEx = {'C': 200e-12, 'g_L': 12e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 2e-9, 'V_T': -50e-3,
+              'tau_W': 600e-3, 'b': 8e-12, 'V_R': -58e-3, 'V_cut': 50e-3, 'refrac': 0.00, 'n': 5,
+              'dt': 0.00001}
 
 neuron = AdEx(parameters_AdEx)
 neuron.initialize_state()
@@ -57,6 +58,3 @@ ax2 = ax1.twinx()
 ax1.plot(time[spikes], firing_rate-np.min(firing_rate), color='red')
 ax2.plot(time, joint_angle-np.min(joint_angle), color='blue')
 plot_position_interneuron(ax1, ax2, fig, 'uni')
-
-plt.scatter(time, spike_list[:, 0])
-plt.show()

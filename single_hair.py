@@ -7,9 +7,9 @@ v_var = np.array([24, 47, 88, 151, 245])
 max_angle_var = np.array([15, 23, 34, 46, 60])
 v_stat = 47
 max_angle_stat = 37
-parameters = {'C': 200e-12, 'g_L': 2e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 2e-9, 'V_T': -50e-3,
-              'tau_W': 600e-3, 'b': 8e-12, 'V_R': -58e-3, 'V_cut': -30e-3, 'refrac': 0.00, 'n': 5,
-              'dt': 0.0001}
+parameters = {'C': 200e-12, 'g_L': 12e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 2e-9, 'V_T': -50e-3,
+              'tau_W': 600e-3, 'b': 8e-12, 'V_R': -58e-3, 'V_cut': 50e-3, 'refrac': 0.00, 'n': 5,
+              'dt': 0.00001}
 t_total = 10
 colors = ['green', 'yellow', 'blue', 'black', 'red']
 
@@ -24,9 +24,9 @@ for [v, max_angle] in [[v_var, max_angle_stat], [v_stat, max_angle_var]]:
     ramp_generator = RampGenerator(parameters_ramp)
     input_ramp = ramp_generator.ramp()
 
+
     neuron = AdEx(parameters)
     neuron.initialize_state()
-
     voltage, time, spike_list = np.empty(input_ramp.numpy().shape), np.array([]), np.empty(input_ramp.numpy().shape)
     for i in range(N_steps):
         voltage[i, :], spike_list[i, :] = neuron.forward(input_ramp[i])

@@ -37,7 +37,7 @@ class HairField:
         self.max_joint_angle = half + self.overlap_bi
 
         self.get_receptive_field()
-        rf1 = np.flip(self.receptive_field)
+        rf1 = np.flip(np.flip(self.receptive_field), 1)
 
         self.max_joint_angle = 2 * half - self.min_joint_angle
         self.min_joint_angle = half - self.overlap_bi
@@ -80,7 +80,7 @@ plt.plot(joint_angle, hair_angles[:, :int(hair_field.N_hairs/2)], color='red')
 plt.plot(joint_angle, hair_angles[:, int(hair_field.N_hairs/2):], color='blue')
 
 for i in range(int(hair_field.N_hairs/2) - 1):
-    plt.fill_between([hair_field.receptive_field[0, 1+i], hair_field.receptive_field[1, i]], [90, 90], color='red',
+    plt.fill_between([hair_field.receptive_field[0, i], hair_field.receptive_field[1, i+1]], [90, 90], color='red',
                      alpha=0.25)
     plt.fill_between([hair_field.receptive_field[0, int(hair_field.N_hairs/2) + 1+i],
                       hair_field.receptive_field[1, int(hair_field.N_hairs/2) + i]], [90, 90], color='blue', alpha=0.25)
