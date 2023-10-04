@@ -67,19 +67,18 @@ class LIF(nn.Module):
     def forward(self, input):
         if self.state is None:
             self.state = self.NeuronState(V=torch.full((self.n,), self.E_L, dtype=torch.float64, device=input.device),
-                                          w=torch.zeros(self.n, device=input.device),
+                                          w=torch.zeros((self.n, self.N_input), device=input.device),
                                           count_refr=torch.zeros(self.n, device=input.device),
                                           spk=torch.zeros(self.n, device=input.device),
-                                          I=torch.zeros(self.n, device=input.device))
+                                          I=torch.zeros((self.n, self.N_input), device=input.device))
         V = self.state.V
         w = self.state.w
         count_refr = self.state.count_refr
         I = self.state.I
 
-        n_spikes = torch.sum(input)
-        w += n_spikes*self.b
+        w += input*self.b
         I += self.dt*(w-I)/self.tau_epsp
-        V += self.dt*(I-V+self.V_R)/self.tau
+        V += self.dt*(torch.sum(I, dim=1)-V+self.V_R)/self.tau
         w += -self.dt*w/self.tau_W
 
         spk = activation(V - self.V_T)

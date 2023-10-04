@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from plots import *
 
@@ -47,6 +46,17 @@ class HairField:
         self.receptive_field = np.hstack((rf1, self.receptive_field))
         self.N_hairs = 2*self.N_hairs
 
+    def get_double_receptive_field(self):
+        self.get_receptive_field()
+        rf1 = self.receptive_field
+
+        max_joint_angle, min_joint_angle = self.max_joint_angle, self.min_joint_angle
+        self.max_joint_angle, self.min_joint_angle = min_joint_angle, max_joint_angle
+
+        self.get_receptive_field()
+        self.receptive_field = np.hstack((rf1, self.receptive_field))
+        self.N_hairs = 2 * self.N_hairs
+
     def get_hair_angle(self, x):
         min_rf = self.receptive_field[0, :]
         slope = self.max_angle / (self.receptive_field[1, :] - self.receptive_field[0, :])
@@ -66,7 +76,7 @@ hair_field = HairField(parameters_hair_field)
 hair_field.get_receptive_field()
 hair_angles = hair_field.get_hair_angle(joint_angle)
 
-plt.plot(joint_angle, hair_angles, color='blue')
+plt.plot(joint_angle, hair_angles.numpy(), color='blue')
 for i in range(hair_field.N_hairs - 1):
     plt.fill_between([hair_field.receptive_field[0, 1+i], hair_field.receptive_field[1, i]], [90, 90], color='grey',
                      alpha=0.35)
@@ -76,8 +86,8 @@ plot_hair_field(plt.gca(), 'uni')
 hair_field.get_binary_receptive_field()
 hair_angles = hair_field.get_hair_angle(joint_angle)
 
-plt.plot(joint_angle, hair_angles[:, :int(hair_field.N_hairs/2)], color='red')
-plt.plot(joint_angle, hair_angles[:, int(hair_field.N_hairs/2):], color='blue')
+plt.plot(joint_angle, hair_angles[:, :int(hair_field.N_hairs/2)].numpy(), color='red')
+plt.plot(joint_angle, hair_angles[:, int(hair_field.N_hairs/2):].numpy(), color='blue')
 
 for i in range(int(hair_field.N_hairs/2) - 1):
     plt.fill_between([hair_field.receptive_field[0, i], hair_field.receptive_field[1, i+1]], [90, 90], color='red',

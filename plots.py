@@ -5,7 +5,7 @@ import numpy as np
 if not os.path.exists("Images"):
     os.makedirs("Images")
 
-colors = ['red', 'black', 'blue', 'yellow', 'green']
+colors = ['r', 'k', 'b', 'y', 'g', 'purple']
 
 
 def plot_single_hair(ax, v):
@@ -58,11 +58,11 @@ def plot_position_interneuron(ax1, ax2, fig, name):
     return
 
 
-def plot_spike_timing(ax1, ax2, fig, N_index):
+def plot_spike_timing(ax1, ax2, fig, n_index):
 
     ax1.set_xlabel("time [s]")
     ax1.set_ylabel("Neuron index")
-    ax1.set_yticks(np.arange(N_index))
+    ax1.set_yticks(np.arange(n_index))
     ax2.set_ylabel("Joint Angle [°]")
 
     fig.tight_layout(pad=0.5)
@@ -70,3 +70,25 @@ def plot_spike_timing(ax1, ax2, fig, N_index):
     fig.clear()
     return
 
+
+def plot_movement_interneuron(ax, fig):
+
+    ax.set_xlabel("Velocity [°/s]")
+    ax.set_ylabel("firing rate [imp/s]")
+
+    fig.tight_layout(pad=0.5)
+    fig.savefig('Images/movement_interneuron.png')
+    fig.clear()
+    return
+
+
+def plot_movement_interneuron_network(ax, fig):
+
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel("Joint Angle [°]")
+
+    fig.legend(['Stimulus', 'Up', 'Down'])
+    fig.tight_layout(pad=0.5)
+    fig.savefig('Images/movement_interneuron_network.png')
+    fig.clear()
+    return
