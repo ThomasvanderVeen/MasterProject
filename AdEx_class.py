@@ -84,7 +84,6 @@ class AdEx(nn.Module):
         V = (1 - spk) * V * (count_refr <= 0) + spk * self.V_R + (1 - spk) * self.V_R * (count_refr > 0)
         w += spk*self.b
 
-
         self.state = self.NeuronState(V=V, w=w, count_refr=count_refr, spk=spk)
 
         return V, spk

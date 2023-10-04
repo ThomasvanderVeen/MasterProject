@@ -15,10 +15,12 @@ class RampGenerator:
         input_ramp = torch.empty((self.n_steps, n_dims))
 
         for i in range(n_dims):
-            t1 = torch.linspace(self.low[i], self.height[i], steps=self.n_ramp[i], dtype=torch.float64, device=self.device)
+            t1 = torch.linspace(self.low[i], self.height[i], steps=self.n_ramp[i], dtype=torch.float64,
+                                device=self.device)
             t2 = torch.linspace(self.height[i], self.height[i], steps=self.n_steps - 2 * self.n_ramp[i],
                                 dtype=torch.float64, device=self.device)
-            t3 = torch.linspace(self.height[i], self.low[i], steps=self.n_ramp[i], dtype=torch.float64, device=self.device)
+            t3 = torch.linspace(self.height[i], self.low[i], steps=self.n_ramp[i], dtype=torch.float64,
+                                device=self.device)
 
             input_ramp[:, i] = torch.cat((t1, t2, t3))
 

@@ -79,7 +79,6 @@ class LIF_simple(nn.Module):
         G += self.dt*(self.G_r-G)/self.tau_G
 
         V += torch.sum(G*input)
-        print(-G*(1-self.p)*input, input, G)
         G += -G*(1-self.p)*input
 
         spk = activation(V - self.V_T)
