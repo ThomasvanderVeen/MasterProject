@@ -1,5 +1,6 @@
 import torch
 from plots import *
+import time
 
 
 class HairField:
@@ -67,7 +68,7 @@ class HairField:
 
         return out
 
-
+'''
 parameters_hair_field = {'N_hairs': 7, 'min_joint_angle': 0, 'max_joint_angle': 180, 'max_angle': 90, 'overlap': 4,
                          'overlap_bi': 18}
 
@@ -96,3 +97,4 @@ for i in range(int(hair_field.N_hairs/2) - 1):
                       hair_field.receptive_field[1, int(hair_field.N_hairs/2) + i]], [90, 90], color='blue', alpha=0.25)
 
 plot_hair_field(plt.gca(), 'bi')
+'''

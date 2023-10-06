@@ -28,3 +28,12 @@ def interpolate(joint_angle, t, n):
     joint_angle = np.interp(xvals, x, joint_angle)
 
     return joint_angle
+
+
+def define_and_initialize(class_handle, parameters):
+    neuron = class_handle(parameters)
+    neuron.initialize_state()
+    return neuron
+
+
+
