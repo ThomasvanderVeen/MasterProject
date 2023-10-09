@@ -6,15 +6,15 @@ from plots import *
 from functions import *
 import matplotlib.pyplot as plt
 
-variables = {'dt': 0.0001, 't_total': 10, 'N_steps': None}
-variables['N_steps'] = round(variables['t_total']/variables['dt'])
-
 data = pickle_open('simulation_data')
 
-joint_angle = data[f'simulation_0'][0][:1000]
-joint_angle = interpolate(joint_angle, variables['t_total'], variables['N_steps'])
+joint_angle = np.array(data[f'simulation_3'][0]).T
 
-parameters = Parameters(np.max(joint_angle), np.min(joint_angle), variables['dt'], N_hairs=10)
+parameters = Parameters(max_joint_angle=np.max(joint_angle), min_joint_angle=np.min(joint_angle),
+                        N_hairs=10, t_total=7.5, dt=0.0001, N_sims=1)
+
+joint_angle = joint_angle[:parameters.general['N_frames']]
+joint_angle = interpolate(joint_angle, parameters.general['t_total'], parameters.general['N_steps'])
 parameters.sensory['n'] = int(parameters.sensory['n']/2)
 parameters.position['n'] = 1
 
@@ -26,15 +26,15 @@ neurons = [AdEx, LIF]
 parameters_list = [parameters.sensory, parameters.position]
 sensory_neuron, position_neuron = [define_and_initialize(neurons[i], parameters_list[i]) for i in range(len(neurons))]
 
-time, spike_list, spike_inter = np.array([]), torch.empty(hair_angles.numpy().shape), np.empty([variables['N_steps']])
+time, spike_list, spike_inter = np.array([]), torch.empty(hair_angles.numpy().shape), np.empty([parameters.general['N_steps']])
 
-for i in tqdm(range(variables['N_steps'])):
+for i in tqdm(range(parameters.general['N_steps'])):
     _, spike_list[i, :] = sensory_neuron.forward(hair_angles[i, :])
 
     _, spike_inter[i] = position_neuron.forward(spike_list[i, :])
-    time = np.append(time, i * variables['dt'])
+    time = np.append(time, i * parameters.general['dt'])
 
-firing_rate, spike_index = get_firing_rate(spike_inter, variables['dt'])
+firing_rate, spike_index = get_firing_rate(spike_inter, parameters.general['dt'])
 
 fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()

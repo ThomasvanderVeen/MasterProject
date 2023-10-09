@@ -64,7 +64,7 @@ class LIF_primitive(nn.Module):
     def forward(self, input):
         if self.state is None:
             self.state = self.NeuronState(V=torch.full((self.n,), self.V_R, dtype=torch.float64, device=input.device),
-                                          w=torch.full((self.n, self.N_input), self.w, device=input.device),
+                                          w=torch.tensor(self.w, device=input.device),
                                           count_refr=torch.zeros(self.n, device=input.device),
                                           spk=torch.zeros(self.n, device=input.device),
                                           I=torch.zeros((self.n, self.N_input), device=input.device))
@@ -74,7 +74,6 @@ class LIF_primitive(nn.Module):
         I = self.state.I
 
         V += self.dt*(self.V_R-V)/self.tau
-
         V += torch.sum(w*input, dim=1)
 
         spk = activation(V - self.V_T)

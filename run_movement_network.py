@@ -5,15 +5,15 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-variables = {'dt': 0.001, 't_total': 10, 'N_steps': None}
-variables['N_steps'] = round(variables['t_total']/variables['dt'])
-
 data = pickle_open('simulation_data')
 
-joint_angle = data[f'simulation_0'][0][:1000]
-joint_angle = interpolate(joint_angle, variables['t_total'], variables['N_steps'])
+joint_angle = np.array(data[f'simulation_0'][0]).T
 
-parameters = Parameters(np.max(joint_angle), np.min(joint_angle), variables['dt'], N_hairs=20)
+parameters = Parameters(max_joint_angle=np.amax(joint_angle, axis=0), min_joint_angle=np.amin(joint_angle, axis=0),
+                        N_hairs=20, t_total=7.5, dt=0.001, N_sims=1)
+
+joint_angle = joint_angle[:parameters.general['N_frames']]
+joint_angle = interpolate(joint_angle, parameters.general['t_total'], parameters.general['N_steps'])
 
 hair_field = HairField(parameters.hair_field)
 hair_field.get_double_receptive_field()
@@ -25,9 +25,9 @@ sensory_neuron, velocity_neuron = [define_and_initialize(neurons[i], parameters_
 
 hair_angles = hair_field.get_hair_angle(joint_angle)
 
-time, spike_list, spike_inter = np.array([]), torch.empty(hair_angles.shape), np.empty([variables['N_steps'],
+time, spike_list, spike_inter = np.array([]), torch.empty(hair_angles.shape), np.empty([parameters.general['N_steps'],
                                                                                         parameters.velocity['n']])
-for i in tqdm(range(variables['N_steps'])):
+for i in tqdm(range(parameters.general['N_steps'])):
     _, spike_list[i, :] = sensory_neuron.forward(hair_angles[i, :])
     reshaped_spikes = torch.reshape(spike_list[i, :], (parameters.velocity['n'], (parameters.hair_field['N_hairs'])))
     _, spike_inter[i, :] = velocity_neuron.forward(reshaped_spikes)

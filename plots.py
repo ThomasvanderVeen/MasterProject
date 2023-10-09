@@ -26,6 +26,7 @@ def plot_single_hair(ax, v):
         fig.savefig('Images/angular_velocity.png')
 
     fig.clear()
+
     return
 
 
@@ -37,6 +38,7 @@ def plot_hair_field(ax, name):
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/hair_field_' + name + '.png')
     fig.clear()
+
     return
 
 
@@ -55,6 +57,7 @@ def plot_position_interneuron(ax1, ax2, fig, name):
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/position_interneuron_' + str(name) + '.png')
     fig.clear()
+
     return
 
 
@@ -68,6 +71,7 @@ def plot_spike_timing(ax1, ax2, fig, n_index):
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/spike_timing_.png')
     fig.clear()
+
     return
 
 
@@ -79,6 +83,7 @@ def plot_movement_interneuron(ax, fig):
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron.png')
     fig.clear()
+
     return
 
 
@@ -91,4 +96,5 @@ def plot_movement_interneuron_network(ax, fig):
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron_network.png')
     fig.clear()
+
     return

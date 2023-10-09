@@ -7,7 +7,9 @@ class HairField:
     def __init__(self, parameters):
         self.N_hairs = parameters['N_hairs']
         self.max_joint_angle = parameters['max_joint_angle']
+        self.max_list = parameters['max_joint_angle']
         self.min_joint_angle = parameters['min_joint_angle']
+        self.min_list = parameters['min_joint_angle']
         self.max_angle = parameters['max_angle']
         self.overlap = parameters['overlap']
         self.overlap_bi = parameters['overlap_bi']
@@ -67,6 +69,11 @@ class HairField:
         out[out > 90] = 90
 
         return out
+
+    def reset_max_min(self, i=0):
+        self.max_joint_angle = self.max_list[i]
+        self.min_joint_angle = self.min_list[i]
+
 
 '''
 parameters_hair_field = {'N_hairs': 7, 'min_joint_angle': 0, 'max_joint_angle': 180, 'max_angle': 90, 'overlap': 4,
