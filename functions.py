@@ -2,9 +2,10 @@ import pickle
 import torch
 import numpy as np
 from tqdm import tqdm
+import itertools
+
 
 def pickle_open(file):
-
     file = open(file, 'rb')
     data = pickle.load(file)
     file.close()
@@ -36,4 +37,45 @@ def define_and_initialize(class_handle, parameters):
     return neuron
 
 
+def get_primitive_indexes(N):
+    permutations = np.array(list(itertools.permutations([-np.inf, 0, 1, 2, 3], 3)))
+    extra = np.array([0, 4, 8])
+    extra = np.tile(extra, (permutations.shape[0], 1))
+    permutations = permutations.astype(int) + extra
+    permutations[permutations < 0] = 0
 
+    return np.ndarray.flatten(permutations)
+
+
+def get_encoding(w_pos, w_vel):
+    encoding = ['none', 'Vel+', 'Vel-', 'Pos+', 'Pos-']
+    permutations = np.array(list(itertools.permutations(encoding, 3)))
+    synapse_type = []
+    w = np.zeros(permutations.shape)
+
+    for permutation in permutations:
+        if 'none' in permutation:
+            if len([s for s in permutation if 'Pos' in s]) == 2:
+                synapse_type.append(2)
+            elif len([s for s in permutation if 'Vel' in s]) == 2:
+                synapse_type.append(1)
+            else:
+                synapse_type.append(0)
+        else:
+            if len([s for s in permutation if 'Pos' in s]) == 2:
+                synapse_type.append(4)
+            else:
+                synapse_type.append(3)
+    for i in range(w.shape[0]):
+        for j in range(w.shape[1]):
+            if 'Pos' in permutations[i, j]:
+                w[i, j] = w_pos[synapse_type[i]]
+            elif 'Vel' in permutations[i, j]:
+                w[i, j] = w_vel[synapse_type[i]]
+
+    encoding_filter = [1, 0, 0, 0, 0]
+    primitive_filter = np.array(list(itertools.permutations(encoding_filter, 3)))
+    encoding_filter_2 = [0, 1, 1, 1, 1]
+    primitive_filter_2 = np.array(list(itertools.permutations(encoding_filter_2, 3)))
+
+    return permutations, synapse_type, w, primitive_filter, primitive_filter_2
