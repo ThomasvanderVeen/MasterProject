@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 import itertools
-
+import scipy.ndimage as img
 
 def pickle_open(file):
     file = open(file, 'rb')
@@ -27,6 +27,7 @@ def interpolate(joint_angle, t, n):
     x = np.linspace(0, t, num=joint_angle.shape[0])
     xvals = np.linspace(0, t, num=n)
     joint_angle = np.interp(xvals, x, joint_angle)
+    joint_angle = smooth_function(joint_angle, sig=25)
 
     return joint_angle
 
@@ -79,3 +80,11 @@ def get_encoding(w_pos, w_vel):
     primitive_filter_2 = np.array(list(itertools.permutations(encoding_filter_2, 3)))
 
     return permutations, synapse_type, w, primitive_filter, primitive_filter_2
+
+
+def smooth_function(inp, sig = 5):
+    minOrig = min(inp)
+    maxOrig = max(inp)
+    smoothed = img.gaussian_filter1d(inp, sig)
+    smoothStretch = minOrig + (((smoothed-min(smoothed))*(maxOrig-minOrig))/(max(smoothed)-min(smoothed)))
+    return smoothStretch
