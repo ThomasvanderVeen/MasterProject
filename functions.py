@@ -18,7 +18,10 @@ def get_firing_rate(spike_train, dt):
     spike_index = np.where(spike_train == 1)[0]
     inter_spike_interval = np.diff(spike_index)*dt
     firing_rate = 1/inter_spike_interval
-    firing_rate = np.append(firing_rate, firing_rate[-1])
+    try:
+        firing_rate = np.append(firing_rate, firing_rate[-1])
+    except:
+        firing_rate = np.append(firing_rate, 0)
 
     return firing_rate, spike_index
 

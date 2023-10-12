@@ -15,8 +15,8 @@ for k in range(N_simulations):
 
     N_sims = 3
     colors = ['r', 'g', 'b', 'black', 'purple', 'purple']
-    w_pos = [2e-3, 0, 15e-3, 10e-3, 5e-3]
-    w_vel = [19e-3, 19e-3, 0, 11e-3, 9e-3]
+    w_pos = [2e-3, 0, 10e-3, 10e-3, 6e-3]
+    w_vel = [19e-3, 19e-3, 0, 8e-3, 8e-3]
 
     #w_pos = [12e-3, 0, 13e-3, 11e-3, 8e-3]
     #w_vel = [13.5e-3, 13e-3, 0, 12.5e-3, 13.5e-3]
@@ -96,7 +96,7 @@ for k in range(N_simulations):
     #plt.scatter(time, joint_angles[:, 0]*spike_position[:, 0].numpy())
     #plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 1].numpy())
     #plt.show()
-    for i in range(10, 60):
+    for i in range(0, 60):
         intersect = spike_primitive.numpy()[:, i] + spike_timings.numpy()[:, i]
         difference = spike_primitive.numpy()[:, i] - spike_timings.numpy()[:, i]
         true_positive[k, i] = intersect[intersect > 1.5].size
@@ -121,7 +121,7 @@ plt.show()
 print((np.sum(true_positive, axis=0)/(0.00001+np.sum(true_positive, axis=0)+np.sum(false_positive, axis=0))))
 
 
-for i in range(60):
+for i in range(10, 60):
     print(synapse_type[i])
     #plt.scatter(time, 50*spike_velocity[:, 0]*spike_position[:, 0], s=1)
     plt.scatter(time, 12*spike_timings[:, i], s=1)
