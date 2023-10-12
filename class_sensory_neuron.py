@@ -76,13 +76,14 @@ class AdEx(nn.Module):
         w = self.state.w
         I = input
         count_refr = self.state.count_refr
-        w += (self.a * (V - self.E_L) - w) * self.dt / self.tau_W
+
         V += (self.g_L*(self.E_L - V) + self.g_L*self.DeltaT*torch.exp((V-self.V_T)/self.DeltaT) - w + I)*self.dt/self.C
 
         spk = activation(V - self.V_cut)
         count_refr = self.refr*spk + (1-spk)*(count_refr-1)
         V = (1 - spk) * V * (count_refr <= 0) + spk * self.V_R + (1 - spk) * self.V_R * (count_refr > 0)
-        w += spk*self.b
+        w += spk * self.b
+        w += (self.a * (V - self.E_L) - w) * self.dt / self.tau_W
 
         self.state = self.NeuronState(V=V, w=w, count_refr=count_refr, spk=spk)
 
