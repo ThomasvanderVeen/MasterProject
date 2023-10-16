@@ -12,18 +12,18 @@ class Parameters:
         self.hair_field = {'N_hairs': N_hairs, 'min_joint_angle': min_joint_angle,
                            'max_joint_angle': max_joint_angle, 'max_angle': 90, 'overlap': 0, 'overlap_bi': 0}
 
-        self.sensory = {'C': 200e-12, 'g_L': 12e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 2e-9, 'V_T': -50e-3,
-                                'tau_W': 600e-3, 'b': 8e-12, 'V_R': -70e-3, 'V_cut': -40e-3, 'refrac': 0.00,
+        self.sensory = {'C': 200e-12, 'g_L': 2e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 4e-9, 'V_T': -50e-3,
+                                'tau_W': 300e-3, 'b': 8e-12, 'V_R': -70e-3, 'V_cut': -40e-3, 'refrac': 0.00,
                                 'n': 2 * N_hairs * N_sims, 'dt': dt}
 
-        self.position = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 50e-3, 'tau_W': 10e-3, 'tau_epsp': 50e-3, 'b': 10e-3,
+        self.position = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 80e-3, 'tau_W': 5e-3, 'tau_epsp': 6e-3, 'b': 10e-3,
                                'V_R': -70e-3, 'n': 2 * N_sims, 'N_input': N_hairs, 'dt': dt, 'refrac': 0}
 
         self.velocity = {'tau': 5e-3, 'tau_G': 200e-3, 'G_r': 25e-3, 'p': 0.1, 'V_T': -50e-3,
                                       'V_R': -70e-3, 'n': 2 * N_sims, 'N_input': N_hairs,
                                       'dt': dt, 'refrac': 0}
 
-        self.primitive = {'tau': 1e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 60, 'w': 0,
+        self.primitive = {'tau': 3e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 60, 'w': 0,
                           'N_input': 3, 'dt': dt, 'refrac': 0}
 
 

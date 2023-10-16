@@ -7,13 +7,25 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_sims = 3
 
-w_pos = [12e-3, 0, 13e-3, 11e-3, 8e-3]
-w_vel = [13.5e-3, 13e-3, 0, 12.5e-3, 13.5e-3]
+def convert_to_bins(old_array, n_bins):
+    n_steps = old_array.shape[0]
+    n_steps_bin = int(n_steps / n_bins)
+    new_array = np.empty((n_bins, old_array.shape[1]), dtype=int)
 
-permutations, synapse_type, weights_primitive, primitive_filter, primitive_filter_2 = get_encoding(w_pos, w_vel)
+    for j in range(new_array.shape[1]):
+        for i in range(n_bins):
+            elements = old_array[n_steps_bin*i:n_steps_bin*(i+1), j]
+            elements[elements == 0] = False
+            if np.any(elements):
+                new_array[i, j] = 1
+            else:
+                new_array[i, j] = 0
 
-for i in range(60):
-    print(permutations[i], synapse_type[i])
+    return new_array
+
+
+array = np.random.choice([1, 0], size=(10, 10), p=[1./10, 9./10])
+new_array = convert_to_bins(array, 2)
+
 

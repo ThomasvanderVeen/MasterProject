@@ -91,3 +91,20 @@ def smooth_function(inp, sig = 5):
     smoothed = img.gaussian_filter1d(inp, sig)
     smoothStretch = minOrig + (((smoothed-min(smoothed))*(maxOrig-minOrig))/(max(smoothed)-min(smoothed)))
     return smoothStretch
+
+
+def convert_to_bins(old_array, n_bins):
+    n_steps = old_array.shape[0]
+    n_steps_bin = int(n_steps / n_bins)
+    new_array = np.empty((n_bins, old_array.shape[1]), dtype=int)
+
+    for j in range(new_array.shape[1]):
+        for i in range(n_bins):
+            elements = old_array[n_steps_bin*i:n_steps_bin*(i+1), j]
+            elements[elements == 0] = False
+            if np.any(elements):
+                new_array[i, j] = 1
+            else:
+                new_array[i, j] = 0
+
+    return new_array

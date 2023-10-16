@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+from matplotlib.lines import Line2D
 
 if not os.path.exists("Images"):
     os.makedirs("Images")
@@ -95,6 +96,24 @@ def plot_movement_interneuron_network(ax, fig):
     fig.legend(['Stimulus', 'Up', 'Down'])
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron_network.png')
+    fig.clear()
+
+    return
+
+
+def plot_primitive_interneuron(ax, fig):
+    colors = ['blue', 'black', 'green', 'yellow', 'purple']
+    labels = ['vel-pos', 'vel-vel', 'pos-pos', 'pos-vel-vel', 'vel-pos-pos']
+
+    legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
+                       for i in range(5)]
+
+    ax.set_xlabel("False Positive Rate")
+    ax.set_ylabel("True Positive Rate")
+    ax.legend(handles=legend_elements, loc='lower right')
+
+    fig.tight_layout(pad=0.5)
+    fig.savefig('Images/primitive_interneuron')
     fig.clear()
 
     return

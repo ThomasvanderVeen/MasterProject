@@ -77,8 +77,8 @@ class LIF(nn.Module):
         I = self.state.I
 
         w += input*self.b
+        V += self.dt * (torch.sum(I, dim=1) - V + self.V_R) / self.tau
         I += self.dt*(w-I)/self.tau_epsp
-        V += self.dt*(torch.sum(I, dim=1)-V+self.V_R)/self.tau
         w += -self.dt*w/self.tau_W
 
         spk = activation(V - self.V_T)

@@ -11,7 +11,7 @@ data = pickle_open('simulation_data')
 joint_angle = np.array(data[f'simulation_3'][0]).T
 
 parameters = Parameters(max_joint_angle=np.max(joint_angle), min_joint_angle=np.min(joint_angle),
-                        N_hairs=10, t_total=7.5, dt=0.0001, N_sims=1)
+                        N_hairs=20, t_total=7.5, dt=0.0001, N_sims=1)
 
 joint_angle = joint_angle[:parameters.general['N_frames']]
 joint_angle = interpolate(joint_angle, parameters.general['t_total'], parameters.general['N_steps'])

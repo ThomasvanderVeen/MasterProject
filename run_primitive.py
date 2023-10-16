@@ -7,39 +7,33 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 2
+N_simulations = 50
+w_pos = [12e-3, 0, 10e-3, 11e-3, 6e-3]
+w_vel = [13.5e-3, 13.5e-3, 0, 13.5e-3, 13.5e-3]
+colors = ['blue', 'black', 'green', 'yellow', 'orange']
 
-true_positive, false_positive = np.empty((N_simulations, 60)), np.empty((N_simulations, 60))
+permutations, synapse_type, weights_primitive, primitive_filter, primitive_filter_2 = get_encoding(w_pos, w_vel)
+true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 60)) for _ in range(4)]
 
-for k in range(N_simulations):
+data = pickle_open('simulation_data')
 
-    N_sims = 3
-    colors = ['r', 'g', 'b', 'black', 'purple', 'purple']
-    w_pos = [2e-3, 0, 10e-3, 10e-3, 6e-3]
-    w_vel = [19e-3, 19e-3, 0, 8e-3, 8e-3]
+for k in tqdm(range(N_simulations)):
+    ground_truth = np.zeros([12, 75000])
 
-    #w_pos = [12e-3, 0, 13e-3, 11e-3, 8e-3]
-    #w_vel = [13.5e-3, 13e-3, 0, 12.5e-3, 13.5e-3]
-
-    permutations, synapse_type, weights_primitive, primitive_filter, primitive_filter_2 = get_encoding(w_pos, w_vel)
-
-    data = pickle_open('simulation_data')
-
-    joint_angle = np.array(data[f'simulation_{k}'][:N_sims]).T
+    joint_angle = np.array(data[f'simulation_{k}'][:3]).T
 
     parameters = Parameters(max_joint_angle=np.amax(joint_angle, axis=0), min_joint_angle=np.amin(joint_angle, axis=0),
-                            N_hairs=20, t_total=7.5, dt=0.0003, N_sims=N_sims)
+                            N_hairs=20, t_total=4, dt=0.0001, N_sims=3)
     parameters.position['N_input'] = int(parameters.position['N_input']/2)
     parameters.primitive['w'] = weights_primitive
 
     joint_angle = joint_angle[:parameters.general['N_frames']]
-    joint_angles = np.empty((parameters.general['N_steps'], N_sims))
-    hair_angles = np.empty((parameters.general['N_steps'], 2*N_sims*parameters.hair_field['N_hairs']))
+    joint_angles = np.empty((parameters.general['N_steps'], parameters.general['N_sims']))
+    hair_angles = np.empty((parameters.general['N_steps'], 2*parameters.general['N_sims']*parameters.hair_field['N_hairs']))
 
-    ground_truth = np.zeros([12, 75000])
-
-    for i in range(N_sims):
+    for i in range(parameters.general['N_sims']):
         joint_angles[:, i] = interpolate(joint_angle[:, i], parameters.general['t_total'], parameters.general['N_steps'])
+
         mid = np.max(joint_angles[:, i])/2 + np.min(joint_angles[:, i])/2
         diff = np.diff(joint_angles[:, i])
         ground_truth[0 + 4 * i, np.where(diff > 0)] = 1
@@ -68,7 +62,7 @@ for k in range(N_simulations):
     permutations = get_primitive_indexes(1)
     spike_timings = torch.empty([parameters.general['N_steps'], parameters.primitive['n']])
 
-    for i in tqdm(range(parameters.general['N_steps'])):
+    for i in range(parameters.general['N_steps']):
         _, spike_sensory[i, :] = sensory_neuron.forward(hair_angles[i, :])
 
         reshaped_spikes = torch.reshape(spike_sensory[i, :], (parameters.velocity['n'], (parameters.hair_field['N_hairs'])))
@@ -79,6 +73,7 @@ for k in range(N_simulations):
         pos_vel_spikes = torch.concat((spike_velocity[i, [0, 1]], spike_position[i, [0, 1]],
                                       spike_velocity[i, [2, 3]], spike_position[i, [2, 3]],
                                       spike_velocity[i, [4, 5]], spike_position[i, [4, 5]]))
+
         pos_vel_spikes = pos_vel_spikes[permutations].reshape((parameters.primitive['n'], 3))*primitive_filter_2
         ground_truth_i = ground_truth[permutations, i].reshape((parameters.primitive['n'], 3))*primitive_filter_2
         #spike_combinations = torch.sum(pos_vel_spikes + primitive_filter, dim=1) / 3
@@ -90,45 +85,35 @@ for k in range(N_simulations):
 
         time = np.append(time, i * parameters.sensory['dt'])
 
+    spike_primitive = convert_to_bins(spike_primitive.numpy(), 100)
+    spike_timings = convert_to_bins(spike_timings.numpy(), 100)
 
+    for i in range(60):
+        intersect = spike_primitive[:, i] + spike_timings[:, i]
+        difference = spike_primitive[:, i] - spike_timings[:, i]
 
-    #plt.plot(time, joint_angles[:, 0])
-    #plt.scatter(time, joint_angles[:, 0]*spike_position[:, 0].numpy())
-    #plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 1].numpy())
-    #plt.show()
-    for i in range(0, 60):
-        intersect = spike_primitive.numpy()[:, i] + spike_timings.numpy()[:, i]
-        difference = spike_primitive.numpy()[:, i] - spike_timings.numpy()[:, i]
         true_positive[k, i] = intersect[intersect > 1.5].size
         false_positive[k, i] = difference[difference > 0.5].size
+        true_negative[k, i] = intersect[intersect < 0.5].size
+        false_negative[k, i] = difference[difference < -0.5].size
 
-        #print(true_positive[, ki], false_positive[i], synapse_type[i])
-        #print(true_positive/(true_positive + false_positive + 1), false_positive/(false_positive + true_positive + 1))
-        #
+fig, ax = plt.subplots()
 
 for i in range(60):
     true_pos_sum = np.sum(true_positive, axis=0)
     false_pos_sum = np.sum(false_positive, axis=0)
-    plt.scatter(i, true_pos_sum[i]/(true_pos_sum[i] + false_pos_sum[i] + 0.00001), color=colors[synapse_type[i]])
+    true_neg_sum = np.sum(true_negative, axis=0)
+    false_neg_sum = np.sum(false_negative, axis=0)
+    plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
+                true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
 
-plt.show()
-
-#intersect = spike_primitive.numpy() + spike_timings.numpy()
-#difference = spike_primitive.numpy() - spike_timings.numpy()
-#true_positive = intersect[intersect > 1.5].size
-#false_positive = difference[difference > 0.5].size
-
-print((np.sum(true_positive, axis=0)/(0.00001+np.sum(true_positive, axis=0)+np.sum(false_positive, axis=0))))
+plt.plot([0, 1], [0, 1], color='red', linestyle='dotted')
+plot_primitive_interneuron(ax, fig)
 
 
 for i in range(10, 60):
     print(synapse_type[i])
-    #plt.scatter(time, 50*spike_velocity[:, 0]*spike_position[:, 0], s=1)
-    plt.scatter(time, 12*spike_timings[:, i], s=1)
-    plt.scatter(time, 25*spike_primitive[:, i], s=1)
-    #plt.scatter(time, 15*spike_velocity[:, 0], s=1)
-    #plt.scatter(time, 7.5*spike_position[:, 0], s=1)
-    #print(permutations)
-
+    plt.scatter(np.linspace(0, 10, num=100), 12*spike_timings[:, i], s=1)
+    plt.scatter(np.linspace(0, 10, num=100), 25*spike_primitive[:, i], s=1)
 
     plt.show()
