@@ -102,7 +102,7 @@ def plot_movement_interneuron_network(ax, fig):
 
 
 def plot_primitive_interneuron(ax, fig):
-    colors = ['blue', 'black', 'green', 'yellow', 'purple']
+    colors = ['blue', 'black', 'green', 'yellow', 'orange']
     labels = ['vel-pos', 'vel-vel', 'pos-pos', 'pos-vel-vel', 'vel-pos-pos']
 
     legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)

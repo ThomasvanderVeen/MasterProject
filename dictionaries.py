@@ -23,7 +23,7 @@ class Parameters:
                                       'V_R': -70e-3, 'n': 2 * N_sims, 'N_input': N_hairs,
                                       'dt': dt, 'refrac': 0}
 
-        self.primitive = {'tau': 3e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 60, 'w': 0,
+        self.primitive = {'tau': 2e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 60, 'w': 0,
                           'N_input': 3, 'dt': dt, 'refrac': 0}
 
 

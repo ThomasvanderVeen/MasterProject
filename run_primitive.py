@@ -7,25 +7,30 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 50
-w_pos = [12e-3, 0, 10e-3, 11e-3, 6e-3]
-w_vel = [13.5e-3, 13.5e-3, 0, 13.5e-3, 13.5e-3]
+N_simulations = 20
+w_pos = [10e-3, 0, 10e-3, 6e-3, 6e-3]
+w_vel = [10e-3, 19e-3, 0, 13.5e-3, 13.5e-3]
 colors = ['blue', 'black', 'green', 'yellow', 'orange']
 
 permutations, synapse_type, weights_primitive, primitive_filter, primitive_filter_2 = get_encoding(w_pos, w_vel)
 true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 60)) for _ in range(4)]
-
+swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood = [np.empty((N_simulations, 60, 20)) for _ in range(4)]
 data = pickle_open('simulation_data')
 
 for k in tqdm(range(N_simulations)):
     ground_truth = np.zeros([12, 75000])
 
-    joint_angle = np.array(data[f'simulation_{k}'][:3]).T
+    joint_angle, gait = np.array(data[f'simulation_{k}'][0][:3]).T, np.array(data[f'simulation_{k}'][1])[0, :]
 
+    #print(np.amax(joint_angle, axis=0), np.amin(joint_angle, axis=0))
+    #plt.plot(np.linspace(0, 4, num=joint_angle.shape[0]), joint_angle)
+    #plt.show()
     parameters = Parameters(max_joint_angle=np.amax(joint_angle, axis=0), min_joint_angle=np.amin(joint_angle, axis=0),
                             N_hairs=20, t_total=4, dt=0.0001, N_sims=3)
     parameters.position['N_input'] = int(parameters.position['N_input']/2)
     parameters.primitive['w'] = weights_primitive
+
+    gait = interpolate(gait, parameters.general['t_total'], parameters.general['N_steps'], True)
 
     joint_angle = joint_angle[:parameters.general['N_frames']]
     joint_angles = np.empty((parameters.general['N_steps'], parameters.general['N_sims']))
@@ -85,12 +90,18 @@ for k in tqdm(range(N_simulations)):
 
         time = np.append(time, i * parameters.sensory['dt'])
 
-    spike_primitive = convert_to_bins(spike_primitive.numpy(), 100)
-    spike_timings = convert_to_bins(spike_timings.numpy(), 100)
+    spike_primitive_bins = convert_to_bins(spike_primitive.numpy(), 100)
+    spike_timings_bins = convert_to_bins(spike_timings.numpy(), 100)
+
+    #plt.plot(time, joint_angles[:, 0])
+    #plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 0].numpy())
+    #plt.show()
 
     for i in range(60):
-        intersect = spike_primitive[:, i] + spike_timings[:, i]
-        difference = spike_primitive[:, i] - spike_timings[:, i]
+        swing_bin_rate[k, i, :], stance_bin_rate[k, i, :], swing_bin_likelihood[k, i, :], stance_bin_likelihood[k, i, :] = get_stance_swing_bins(gait, spike_primitive[:, i].numpy())
+
+        intersect = spike_primitive_bins[:, i] + spike_timings_bins[:, i]
+        difference = spike_primitive_bins[:, i] - spike_timings_bins[:, i]
 
         true_positive[k, i] = intersect[intersect > 1.5].size
         false_positive[k, i] = difference[difference > 0.5].size
@@ -98,21 +109,26 @@ for k in tqdm(range(N_simulations)):
         false_negative[k, i] = difference[difference < -0.5].size
 
 fig, ax = plt.subplots()
+swing_bin_likelihood, stance_bin_likelihood = np.mean(swing_bin_likelihood, axis=0), np.mean(stance_bin_likelihood, axis=0)
+
 
 for i in range(60):
+    plt.scatter(np.linspace(0, 1, num=20), swing_bin_likelihood[i, :], color='red')
+    plt.scatter(np.linspace(1, 2, num=20), stance_bin_likelihood[i, :], color='blue')
+    plt.show()
+
     true_pos_sum = np.sum(true_positive, axis=0)
     false_pos_sum = np.sum(false_positive, axis=0)
     true_neg_sum = np.sum(true_negative, axis=0)
     false_neg_sum = np.sum(false_negative, axis=0)
-    plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
-                true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
+    #plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
+    #            true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
 
 plt.plot([0, 1], [0, 1], color='red', linestyle='dotted')
 plot_primitive_interneuron(ax, fig)
 
+for i in range(0, 60):
 
-for i in range(10, 60):
-    print(synapse_type[i])
     plt.scatter(np.linspace(0, 10, num=100), 12*spike_timings[:, i], s=1)
     plt.scatter(np.linspace(0, 10, num=100), 25*spike_primitive[:, i], s=1)
 

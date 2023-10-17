@@ -26,11 +26,15 @@ def get_firing_rate(spike_train, dt):
     return firing_rate, spike_index
 
 
-def interpolate(joint_angle, t, n):
+def interpolate(joint_angle, t, n, gait_boolean=False):
     x = np.linspace(0, t, num=joint_angle.shape[0])
     xvals = np.linspace(0, t, num=n)
     joint_angle = np.interp(xvals, x, joint_angle)
-    joint_angle = smooth_function(joint_angle, sig=25)
+    if not gait_boolean:
+        joint_angle = smooth_function(joint_angle, sig=25)
+    if gait_boolean:
+        joint_angle[joint_angle > 0.5] = 1
+        joint_angle[joint_angle < 0.51] = 0
 
     return joint_angle
 
@@ -93,7 +97,7 @@ def smooth_function(inp, sig = 5):
     return smoothStretch
 
 
-def convert_to_bins(old_array, n_bins):
+def convert_to_bins(old_array, n_bins, sum_bool=False):
     n_steps = old_array.shape[0]
     n_steps_bin = int(n_steps / n_bins)
     new_array = np.empty((n_bins, old_array.shape[1]), dtype=int)
@@ -103,8 +107,38 @@ def convert_to_bins(old_array, n_bins):
             elements = old_array[n_steps_bin*i:n_steps_bin*(i+1), j]
             elements[elements == 0] = False
             if np.any(elements):
-                new_array[i, j] = 1
+                if sum_bool:
+                    new_array[i, j] = np.sum(elements)/n_steps
+                else:
+                    new_array[i, j] = 1
             else:
                 new_array[i, j] = 0
 
     return new_array
+
+
+def get_stance_swing_bins(gait, spike_train):
+    change_index = np.where(gait[:-1] != gait[1:])[0]
+
+    N = int(change_index.size/2)-1
+    swing_bin_rate, swing_bin_likelihood, stance_bin_rate, stance_bin_likelihood = np.zeros((N, 20)), np.zeros((N, 20)),\
+                                                                                    np.zeros((N, 20)), np.zeros((N, 20))
+    for i in range(N):
+        spikes_swing = np.array_split(spike_train[change_index[i]:change_index[i+1]], 20)
+        spikes_stance = np.array_split(spike_train[change_index[i+1]:change_index[i+2]], 20)
+
+        for j in range(20):
+            swing_bin_rate[i, j] = np.sum(spikes_swing[j])
+
+        for k in range(20):
+            stance_bin_rate[i, k] = np.sum(spikes_stance[k])
+
+        stance_bin_likelihood[stance_bin_rate > 0.5] = 1
+        swing_bin_likelihood[swing_bin_rate > 0.5] = 1
+
+    swing_bin_rate = np.sum(swing_bin_rate, axis=0)/N
+    stance_bin_rate = np.sum(stance_bin_rate, axis=0)/N
+    swing_bin_likelihood = np.sum(swing_bin_likelihood, axis=0)/N
+    stance_bin_likelihood = np.sum(stance_bin_likelihood, axis=0)/N
+
+    return swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood
