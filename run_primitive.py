@@ -7,32 +7,41 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 20
-w_pos = [10e-3, 0, 10e-3, 6e-3, 6e-3]
-w_vel = [10e-3, 19e-3, 0, 13.5e-3, 13.5e-3]
+#sim_list = [0, 13, 33, 43, 49, 52, 55, 56, 59, 61, 64, 65, 66, 67, 68, 71, 73, 113, 118, 120, 122, 123, 126, 127, 128, 129, 134, 135, 136, 137, 138, 139, 141, 142, 145, 146, 148, 149, 150, 151, 152, 153, 155, 157, 158, 161, 162, 163, 164, 169, 170, 171, 172, 173, 174, 176, 177, 180, 181, 183, 184, 185, 186, 187, 188, 189, 193, 199, 200, 201, 204, 205, 207, 208, 209, 210, 211, 212, 213, 218, 219, 222, 224, 226, 229, 234, 236, 240, 241, 242, 243, 244, 251, 253, 255, 256, 257, 258, 260, 263, 264, 271, 273, 274, 285, 291, 295, 302, 314, 319, 320, 321, 329, 331, 333, 340, 342, 346, 354, 355, 356, 367, 368, 369, 375, 376, 377, 378, 379, 381, 384, 398]
+sim_list = [0, 62, 99, 118, 138, 142, 148, 150]
+#sim_list = [0, 118]
+N_simulations = len(sim_list)
+w_pos = [11e-3, 0, 12e-3, 10e-3, 7.5e-3]
+w_vel = [13e-3, 13e-3, 0, 11e-3, 12e-3]
 colors = ['blue', 'black', 'green', 'yellow', 'orange']
 
 permutations, synapse_type, weights_primitive, primitive_filter, primitive_filter_2 = get_encoding(w_pos, w_vel)
 true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 60)) for _ in range(4)]
-swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood = [np.empty((N_simulations, 60, 20)) for _ in range(4)]
+swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood = [np.empty((N_simulations, 60, i)) for i in [10, 20, 10, 20]]
 data = pickle_open('simulation_data')
 
 for k in tqdm(range(N_simulations)):
-    ground_truth = np.zeros([12, 75000])
+    print(np.array(data[f'simulation_{sim_list[k]}'][0]).shape)
+    joint_angle, gait = np.array(data[f'simulation_{sim_list[k]}'][0][9:12]).T, np.array(data[f'simulation_{sim_list[k]}'][1])[0, :]
 
-    joint_angle, gait = np.array(data[f'simulation_{k}'][0][:3]).T, np.array(data[f'simulation_{k}'][1])[0, :]
+    print(joint_angle[0, :])
 
     #print(np.amax(joint_angle, axis=0), np.amin(joint_angle, axis=0))
     #plt.plot(np.linspace(0, 4, num=joint_angle.shape[0]), joint_angle)
     #plt.show()
     parameters = Parameters(max_joint_angle=np.amax(joint_angle, axis=0), min_joint_angle=np.amin(joint_angle, axis=0),
-                            N_hairs=20, t_total=4, dt=0.0001, N_sims=3)
+                            N_hairs=20, t_total=8, dt=0.0001, N_sims=3)
     parameters.position['N_input'] = int(parameters.position['N_input']/2)
     parameters.primitive['w'] = weights_primitive
+
+    ground_truth = np.zeros([12, parameters.general['N_steps']])
+
+    gait = gait[:parameters.general['N_frames']]
 
     gait = interpolate(gait, parameters.general['t_total'], parameters.general['N_steps'], True)
 
     joint_angle = joint_angle[:parameters.general['N_frames']]
+
     joint_angles = np.empty((parameters.general['N_steps'], parameters.general['N_sims']))
     hair_angles = np.empty((parameters.general['N_steps'], 2*parameters.general['N_sims']*parameters.hair_field['N_hairs']))
 
@@ -108,28 +117,36 @@ for k in tqdm(range(N_simulations)):
         true_negative[k, i] = intersect[intersect < 0.5].size
         false_negative[k, i] = difference[difference < -0.5].size
 
-fig, ax = plt.subplots()
+
 swing_bin_likelihood, stance_bin_likelihood = np.mean(swing_bin_likelihood, axis=0), np.mean(stance_bin_likelihood, axis=0)
 
 
 for i in range(60):
-    plt.scatter(np.linspace(0, 1, num=20), swing_bin_likelihood[i, :], color='red')
-    plt.scatter(np.linspace(1, 2, num=20), stance_bin_likelihood[i, :], color='blue')
-    plt.show()
+    plt.scatter(np.linspace(0, .475, num=10), swing_bin_likelihood[i, :], color='red')
+    plt.scatter(np.linspace(.525, 1.5, num=20), stance_bin_likelihood[i, :], color='blue')
+    plt.savefig(f'Images_PSTH/neuron_{i}')
+    plt.cla()
+
+fig, ax = plt.subplots()
+
+for i in range(60):
 
     true_pos_sum = np.sum(true_positive, axis=0)
     false_pos_sum = np.sum(false_positive, axis=0)
     true_neg_sum = np.sum(true_negative, axis=0)
     false_neg_sum = np.sum(false_negative, axis=0)
-    #plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
-    #            true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
+    plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
+                true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
+
 
 plt.plot([0, 1], [0, 1], color='red', linestyle='dotted')
 plot_primitive_interneuron(ax, fig)
 
+'''
 for i in range(0, 60):
 
     plt.scatter(np.linspace(0, 10, num=100), 12*spike_timings[:, i], s=1)
     plt.scatter(np.linspace(0, 10, num=100), 25*spike_primitive[:, i], s=1)
 
     plt.show()
+'''

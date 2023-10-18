@@ -20,7 +20,7 @@ for animal in animals_list:
             try:
                 simulation_file = scipy.io.loadmat(file_path)
                 for leg in range(6):
-                    for joint in range(2):
+                    for joint in range(3):
                         if joint == 1:
                             angle_list = np.array(simulation_file[legs[leg]][0][0][joint + 2][0][0][2][:, 0] +
                                                   simulation_file[legs[leg]][0][0][joint + 1][0][0][2][:, 2])

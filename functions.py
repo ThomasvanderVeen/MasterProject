@@ -121,24 +121,28 @@ def get_stance_swing_bins(gait, spike_train):
     change_index = np.where(gait[:-1] != gait[1:])[0]
 
     N = int(change_index.size/2)-1
-    swing_bin_rate, swing_bin_likelihood, stance_bin_rate, stance_bin_likelihood = np.zeros((N, 20)), np.zeros((N, 20)),\
+    swing_bin_rate, swing_bin_likelihood, stance_bin_rate, stance_bin_likelihood = np.zeros((N, 10)), np.zeros((N, 10)),\
                                                                                     np.zeros((N, 20)), np.zeros((N, 20))
+
     for i in range(N):
-        spikes_swing = np.array_split(spike_train[change_index[i]:change_index[i+1]], 20)
-        spikes_stance = np.array_split(spike_train[change_index[i+1]:change_index[i+2]], 20)
+        k = 0
+        if gait[0] == 0:
+            k = 1
 
-        for j in range(20):
+        spikes_swing = np.array_split(spike_train[change_index[2*i+k]:change_index[1+2*i+k]], 10)
+        spikes_stance = np.array_split(spike_train[change_index[1+2*i+k]:change_index[2+2*i+k]], 20)
+
+        for j in range(10):
             swing_bin_rate[i, j] = np.sum(spikes_swing[j])
-
-        for k in range(20):
-            stance_bin_rate[i, k] = np.sum(spikes_stance[k])
+        for j in range(20):
+            stance_bin_rate[i, j] = np.sum(spikes_stance[j])
 
         stance_bin_likelihood[stance_bin_rate > 0.5] = 1
         swing_bin_likelihood[swing_bin_rate > 0.5] = 1
 
-    swing_bin_rate = np.sum(swing_bin_rate, axis=0)/N
-    stance_bin_rate = np.sum(stance_bin_rate, axis=0)/N
-    swing_bin_likelihood = np.sum(swing_bin_likelihood, axis=0)/N
-    stance_bin_likelihood = np.sum(stance_bin_likelihood, axis=0)/N
+    swing_bin_rate = np.mean(swing_bin_rate, axis=0)
+    stance_bin_rate = np.mean(stance_bin_rate, axis=0)
+    swing_bin_likelihood = np.mean(swing_bin_likelihood, axis=0)
+    stance_bin_likelihood = np.mean(stance_bin_likelihood, axis=0)
 
     return swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood
