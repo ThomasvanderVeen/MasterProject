@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import itertools
 import scipy.ndimage as img
+import matplotlib.pyplot as plt
 
 def pickle_open(file):
     file = open(file, 'rb')
@@ -134,6 +135,7 @@ def get_stance_swing_bins(gait, spike_train):
 
         for j in range(10):
             swing_bin_rate[i, j] = np.sum(spikes_swing[j])
+
         for j in range(20):
             stance_bin_rate[i, j] = np.sum(spikes_stance[j])
 

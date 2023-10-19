@@ -20,7 +20,7 @@ for i in range(400):
 
     if change_index.size < 18:
         sim_list.append(i)
-
+    print(i)
 print(sim_list)
 
 for j in sim_list:

@@ -7,7 +7,7 @@ path = "/home/s3488926/Documents/master_project/drive/Kinematic_Data"
 data = {}
 i = 0
 animals_list = os.listdir(path)
-legs = ['L1', 'L2', 'L3', 'R1', 'R2', 'R3']
+legs = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
 for animal in animals_list:
     animal_path = f"{path}/{animal}"
     sessions_list = os.listdir(animal_path)
@@ -24,6 +24,7 @@ for animal in animals_list:
                         if joint == 1:
                             angle_list = np.array(simulation_file[legs[leg]][0][0][joint + 2][0][0][2][:, 0] +
                                                   simulation_file[legs[leg]][0][0][joint + 1][0][0][2][:, 2])
+                            joint_angles.append(angle_list)
                         else:
                             angle_list = np.array(simulation_file[legs[leg]][0][0][joint + 2][0][0][2][:, 0])
                             joint_angles.append(angle_list)
@@ -32,7 +33,8 @@ for animal in animals_list:
                 data[f"simulation_{i}"] = [joint_angles, gaits]
                 i += 1
             except:
-                print(f"skipped file: {file_path}")
+                print('skipped file')
+
 
 
 file = open('simulation_data', 'wb')
