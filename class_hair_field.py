@@ -49,7 +49,7 @@ class HairField:
         self.receptive_field = np.hstack((rf1, self.receptive_field))
         self.N_hairs = 2*self.N_hairs
 
-    def get_double_receptive_field(self):
+    def get_double_receptive_field(self, i=0):
         self.get_receptive_field()
         rf1 = self.receptive_field
 

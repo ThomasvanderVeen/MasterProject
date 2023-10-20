@@ -6,7 +6,7 @@ from functions import *
 
 v_var, v_stat = np.array([24, 47, 88, 151, 245]), 47
 max_angle_var, max_angle_stat = np.array([15, 23, 34, 46, 60]), 37
-parameters = Parameters(1, 1, 0.0001, 1)
+parameters = Parameters(1, 1, 1, 10, 0.0001, 1)
 parameters.sensory['n'] = 5
 
 t_total = 10

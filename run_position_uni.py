@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 data = pickle_open('simulation_data')
 
-joint_angle = np.array(data[f'simulation_3'][0]).T
+joint_angle = np.array(data[f'simulation_3'][0][0]).T
 
 parameters = Parameters(max_joint_angle=np.max(joint_angle), min_joint_angle=np.min(joint_angle),
                         N_hairs=20, t_total=7.5, dt=0.0001, N_sims=1)

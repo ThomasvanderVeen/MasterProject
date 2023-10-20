@@ -7,12 +7,12 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 20
+N_simulations = 3
 w_pos = [11e-3, 0, 12e-3, 10e-3, 7.5e-3]
 w_vel = [13e-3, 13e-3, 0, 11e-3, 12e-3]
 colors = ['blue', 'black', 'green', 'yellow', 'orange']
 data = pickle_open('simulation_data')
-for m in range(6):
+for m in range(1):
     permutations, synapse_type, weights_primitive, primitive_filter, primitive_filter_2 = get_encoding(w_pos, w_vel)
     true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 60)) for _ in range(4)]
     swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood = [np.empty((N_simulations, 60, i)) for

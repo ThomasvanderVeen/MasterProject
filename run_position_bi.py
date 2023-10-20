@@ -8,7 +8,7 @@ from functions import *
 
 data = pickle_open('simulation_data')
 
-joint_angle = np.array(data[f'simulation_0'][0]).T
+joint_angle = np.array(data[f'simulation_0'][0][0]).T
 
 parameters = Parameters(max_joint_angle=np.amax(joint_angle, axis=0), min_joint_angle=np.amin(joint_angle, axis=0),
                         N_hairs=10, t_total=7.5, dt=0.0001, N_sims=1)

@@ -1,9 +1,14 @@
-import os
-import numpy as np
 import scipy.io
-import pickle
+from functions import *
 
-path = "/home/s3488926/Documents/master_project/drive/Kinematic_Data"
+if os.name == 'nt':
+    path = "C:\DOCUMENTEN\RUG\Master\Master Research Project\Kinematic_Data"
+    print("Windows path used")
+else:
+    path = "/home/s3488926/Documents/master_project/drive/Kinematic_Data"
+    print("Linux path used")
+
+
 data = {}
 i = 0
 animals_list = os.listdir(path)
@@ -33,11 +38,9 @@ for animal in animals_list:
                 data[f"simulation_{i}"] = [joint_angles, gaits]
                 i += 1
             except:
-                print('skipped file')
-
+                clear_and_print(f'skipped file {file_path}')
 
 
 file = open('simulation_data', 'wb')
 pickle.dump(data, file)
 file.close()
-
