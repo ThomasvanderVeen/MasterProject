@@ -57,7 +57,7 @@ class HairField:
         self.max_joint_angle, self.min_joint_angle = min_joint_angle, max_joint_angle
 
         self.get_receptive_field()
-        self.receptive_field = np.hstack((rf1, self.receptive_field))
+        self.receptive_field = np.hstack((self.receptive_field, rf1))
         self.N_hairs = 2 * self.N_hairs
 
     def get_hair_angle(self, x):

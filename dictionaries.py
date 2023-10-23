@@ -16,14 +16,14 @@ class Parameters:
                                 'tau_W': 600e-3, 'b': 8e-12, 'V_R': -70e-3, 'V_cut': -40e-3, 'refrac': 0.00,
                                 'n': 2 * N_hairs * N_sims, 'dt': dt}
 
-        self.position = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 80e-3, 'tau_W': 5e-3, 'tau_epsp': 6e-3, 'b': 10e-3,
+        self.position = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 80e-3, 'tau_W': 5e-3, 'tau_epsp': 6e-3, 'b': 20e-3,
                                'V_R': -70e-3, 'n': 2 * N_sims, 'N_input': N_hairs, 'dt': dt, 'refrac': 0}
 
         self.velocity = {'tau': 2e-3, 'tau_G': 200e-3, 'G_r': 25e-3, 'p': 0.1, 'V_T': -50e-3,
                                       'V_R': -70e-3, 'n': 2 * N_sims, 'N_input': N_hairs,
                                       'dt': dt, 'refrac': 0}
 
-        self.primitive = {'tau': 2e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 60, 'w': 0,
+        self.primitive = {'tau': 50e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 60, 'w': 0,
                           'N_input': 3, 'dt': dt, 'refrac': 0}
 
 

@@ -66,7 +66,7 @@ def plot_spike_timing(ax1, ax2, fig, n_index):
 
     ax1.set_xlabel("time [s]")
     ax1.set_ylabel("Neuron index")
-    ax1.set_yticks(np.arange(n_index))
+    ax1.set_yticks(np.arange(1, n_index+1))
     ax2.set_ylabel("Joint Angle [°]")
 
     fig.tight_layout(pad=0.5)

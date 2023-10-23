@@ -7,7 +7,7 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 3
+N_simulations = 2
 w_pos = [11e-3, 0, 12e-3, 10e-3, 7.5e-3]
 w_vel = [13e-3, 13e-3, 0, 11e-3, 12e-3]
 colors = ['blue', 'black', 'green', 'yellow', 'orange']
@@ -25,7 +25,7 @@ for m in range(1):
         #plt.plot(np.linspace(0, 4, num=joint_angle.shape[0]), joint_angle)
         #plt.show()
         parameters = Parameters(max_joint_angle=np.amax(joint_angle, axis=0), min_joint_angle=np.amin(joint_angle, axis=0),
-                                N_hairs=20, t_total=8, dt=0.0001, N_sims=3)
+                                N_hairs=20, t_total=8, dt=0.001, N_sims=3)
         parameters.position['N_input'] = int(parameters.position['N_input']/2)
         parameters.primitive['w'] = weights_primitive
 
@@ -53,7 +53,7 @@ for m in range(1):
             hair_field.reset_max_min(i)
             hair_field.get_double_receptive_field()
             hair_angles[:, i*2*parameters.hair_field['N_hairs']: 2*parameters.hair_field['N_hairs']+i*2*parameters.hair_field['N_hairs']]\
-                = hair_field.get_hair_angle(joint_angles[:, i])
+                = hair_field.get_hair_angle(joint_angles[:, i])/37e9
 
         hair_angles = torch.from_numpy(hair_angles)
 

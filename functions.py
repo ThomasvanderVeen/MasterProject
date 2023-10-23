@@ -103,6 +103,7 @@ def get_encoding(w_pos, w_vel):
     encoding_filter_2 = [0, 1, 1, 1, 1]
     primitive_filter_2 = np.array(list(itertools.permutations(encoding_filter_2, 3)))
 
+    primitive_filter = np.tile(primitive_filter, (6, 1))
     primitive_filter_2 = np.tile(primitive_filter_2, (6, 1))
     w = np.tile(w, (6, 1))
 
@@ -172,10 +173,8 @@ def get_stance_swing_bins(gait, spike_train):
 def prepare_spikes_primitive(spike_velocity, spike_position, permutations, mask):
     toepel = ()
 
-    for i in range(6):
-        toepel += ((spike_velocity[i, [0 + 2*i, 1 + 2*i]], spike_position[i, [0 + 2*i, 1 + 2*i]],
-                    spike_velocity[i, [2 + 2*i, 3 + 2*i]], spike_position[i, [2 + 2*i, 3 + 2*i]],
-                    spike_velocity[i, [4 + 2*i, 5 + 2*i]], spike_position[i, [4 + 2*i, 5 + 2*i]]))
+    for i in range(18):
+        toepel += (spike_velocity[[0 + 2*i, 1 + 2*i]], spike_position[[0 + 2*i, 1 + 2*i]])
 
     pos_vel_spikes = torch.concat(toepel)
     pos_vel_spikes = pos_vel_spikes[permutations].reshape((360, 3))*mask
