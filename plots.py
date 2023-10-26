@@ -51,7 +51,7 @@ def plot_position_interneuron(ax1, ax2, fig, name):
     if name == 'uni':
         fig.legend(['Model Response', 'Exp. Data'])
     else:
-        ax1.legend(['Ventral Response', 'Dorsal Response'])
+        ax1.legend(['Dorsal Response', 'Ventral Response'])
 
     ax2.set_ylabel("Joint Angle [°]")
 
@@ -93,7 +93,7 @@ def plot_movement_interneuron_network(ax, fig):
     ax.set_xlabel("Time [s]")
     ax.set_ylabel("Joint Angle [°]")
 
-    fig.legend(['Stimulus', 'Up', 'Down'])
+    fig.legend(['Stimulus', 'Down', 'Up'])
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron_network.png')
     fig.clear()
@@ -101,7 +101,7 @@ def plot_movement_interneuron_network(ax, fig):
     return
 
 
-def plot_primitive_interneuron(ax, fig):
+def plot_primitive_ROC(ax, fig):
     colors = ['blue', 'black', 'green', 'yellow', 'orange']
     labels = ['vel-pos', 'vel-vel', 'pos-pos', 'pos-vel-vel', 'vel-pos-pos']
 
@@ -113,7 +113,16 @@ def plot_primitive_interneuron(ax, fig):
     ax.legend(handles=legend_elements, loc='lower right')
 
     fig.tight_layout(pad=0.5)
-    fig.savefig('Images/primitive_interneuron')
+    fig.savefig('Images/primitive_ROC')
     fig.clear()
 
     return
+
+
+def plot_psth(ax, fig, neuron, leg):
+    ax.set_ylabel('Likelihood of Spiking')
+    fig.text(0.33, 0.04, 'Swing', ha='center')
+    fig.text(0.66, 0.04, 'Stance')
+    ax.set_xticks([])
+    fig.savefig(f'Images_PSTH/neuron_{neuron}_leg_{leg}')
+    plt.cla()

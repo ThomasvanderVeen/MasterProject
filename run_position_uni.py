@@ -6,16 +6,17 @@ from plots import *
 from functions import *
 import matplotlib.pyplot as plt
 
-data = pickle_open('simulation_data')
+data = pickle_open('Data/simulation_data')
 
 joint_angle = np.array(data[f'simulation_3'][0][0]).T
 
 parameters = Parameters(max_joint_angle=np.max(joint_angle), min_joint_angle=np.min(joint_angle),
-                        N_hairs=20, t_total=7.5, dt=0.0001, N_sims=1)
+                        n_hairs=20, t_total=7.5, dt=0.0001, n_angles=1)
 
 joint_angle = joint_angle[:parameters.general['N_frames']]
 joint_angle = interpolate(joint_angle, parameters.general['t_total'], parameters.general['N_steps'])
 parameters.sensory['n'] = int(parameters.sensory['n']/2)
+parameters.position['N_input'] = int(parameters.hair_field['N_hairs'])
 parameters.position['n'] = 1
 
 hair_field = HairField(parameters.hair_field)

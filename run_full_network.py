@@ -7,12 +7,12 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 25
-w_pos = [19e-3, 0, 19e-3, 12e-3, 12e-3]
-w_vel = [19e-3, 19e-3, 0, 12e-3, 12e-3]
+N_simulations = 2
+w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
+w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
 _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
 permutations = get_primitive_indexes(6)
-data = pickle_open('simulation_data')
+data = pickle_open('Data/simulation_data')
 
 joint_angles_list, primitive_list = [], []
 
@@ -20,10 +20,12 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     joint_angles = np.array(data[f'simulation_{k}'][0]).T
 
     parameters = Parameters(max_joint_angle=np.amax(joint_angles, axis=0), min_joint_angle=np.amin(joint_angles, axis=0),
-                            N_hairs=20, t_total=8, dt=0.0003, N_sims=18)
-    parameters.position['N_input'] = int(parameters.position['N_input']/2)
-    parameters.primitive['n'] = 360
+                            n_hairs=20, t_total=5.5, dt=0.001, n_angles=18)
     parameters.primitive['w'] = weights_primitive
+
+    N_frames = parameters.general['N_frames']
+    if joint_angles.shape[0] < N_frames:
+        raise Exception(f'Total frames exceeds maximum: {joint_angles.shape[0]} < {N_frames}')
 
     joint_angles = joint_angles[:parameters.general['N_frames']]
     joint_angles = interpolate(joint_angles, parameters.general['t_total'], parameters.general['N_steps'])
@@ -47,7 +49,7 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
         [torch.empty((parameters.general['N_steps'], par['n'])) for par in parameters_list[1:]]
 
     for i in range(parameters.general['N_steps']):
-        time = np.append(time, i)
+        time = np.append(time, i*parameters.general['dt'])
         _, spike_sensory[i, :] = sensory_neuron.forward(torch.from_numpy(hair_angles[i, :]))
 
         reshaped_spikes = torch.reshape(spike_sensory[i, :], (parameters.velocity['n'], (parameters.hair_field['N_hairs'])))
@@ -59,9 +61,11 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
 
         _, spike_primitive[i, :] = primitive_neuron.forward(pos_vel_spikes)
 
-    primitive_list.append(spike_primitive), joint_angles_list.append(joint_angles)
+    primitive_list.append(spike_primitive.numpy()), joint_angles_list.append(joint_angles)
 
-#if False:
+#pickle_save(primitive_list, 'primitive_list')
+
+
 '''
 Position neuron testing
 '''
@@ -110,10 +114,10 @@ plot_movement_interneuron_network(ax, fig)
 '''
 Primitive neuron testing (ROC plot)
 '''
-'''
+
 N_joints = joint_angles.shape[1]
 N_legs = 6
-true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 60)) for _ in range(4)]
+true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 360)) for _ in range(4)]
 for k in tqdm(range(N_simulations), desc='ROC plot progress'):
     joint_angles, spike_primitive = joint_angles_list[k], primitive_list[k]
     ground_truth, ground_vel, ground_pos = [np.zeros([parameters.general['N_steps'], i]) for i in [360, 36, 36]]
@@ -134,9 +138,9 @@ for k in tqdm(range(N_simulations), desc='ROC plot progress'):
         ground_truth[j, ground_truth_2 < 2.9] = 0
 
     ground_truth_bins = convert_to_bins(ground_truth, 100)
-    spike_primitive_bins = convert_to_bins(spike_primitive.numpy(), 100)
+    spike_primitive_bins = convert_to_bins(spike_primitive, 100)
 
-    for i in range(60):
+    for i in range(360):
         intersect = spike_primitive_bins[:, i] + ground_truth_bins[:, i]
         difference = spike_primitive_bins[:, i] - ground_truth_bins[:, i]
 
@@ -153,13 +157,13 @@ false_pos_sum = np.sum(false_positive, axis=0)
 true_neg_sum = np.sum(true_negative, axis=0)
 false_neg_sum = np.sum(false_negative, axis=0)
 
-for i in range(60):
+for i in range(360):
     plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
                 true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
 
 plt.plot([0, 1], [0, 1], color='red', linestyle='dotted')
-plot_primitive_interneuron(ax, fig)
-'''
+plot_primitive_ROC(ax, fig)
+
 '''
 Primitive neuron testing (PSTH plot)
 '''
@@ -168,29 +172,39 @@ for m in tqdm(range(6), desc='PSTH plot progress'):
     swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood = [np.empty((N_simulations, 60, i)) for
                                                                                     i in [10, 20, 10, 20]]
     for k in range(N_simulations):
+        spike_primitive = primitive_list[k]
         gait = np.array(data[f'simulation_{k}'][1])[m, :]
         gait = gait[:parameters.general['N_frames']]
         gait = interpolate(gait, parameters.general['t_total'], parameters.general['N_steps'], True)
         for i in range(60):
             swing_bin_rate[k, i, :], stance_bin_rate[k, i, :], swing_bin_likelihood[k, i, :], stance_bin_likelihood[k, i, :] = \
-                get_stance_swing_bins(gait, spike_primitive[:, i + 60*m].numpy())
+                get_stance_swing_bins(gait, spike_primitive[:, i + 60*m])
 
     swing_bin_likelihood, stance_bin_likelihood = np.mean(swing_bin_likelihood, axis=0), np.mean(stance_bin_likelihood, axis=0)
+
     fig, ax = plt.subplots()
+
     for i in range(60):
         ax.scatter(np.linspace(0, .475, num=10), swing_bin_likelihood[i, :], color='red', marker='^')
         ax.scatter(np.linspace(.525, 1.5, num=20), stance_bin_likelihood[i, :], color='blue', marker='^')
-        ax.set_ylabel('Likelihood of Spiking')
-        fig.text(0.33, 0.04, 'Swing', ha='center')
-        fig.text(0.66, 0.04, 'Stance')
-        ax.set_xticks([])
-        fig.savefig(f'Images_PSTH/neuron_{i}_leg_{m}')
-        plt.cla()
+
+        plot_psth(ax, fig, i, m)
 
 '''
 Body pitch estimation
 '''
 '''
+tau = [50e-3, 100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3]
+
+def lowpass(x,dt,tau):
+    y = np.zeros(len(x))
+    alpha = dt/(dt+tau)
+    y[0] = alpha * x[0]
+    for i in np.arange(1,len(x),1):
+        y[i] = alpha * x[i] + (1-alpha) * y[i-1]
+    return y
+
+
 def highpass(x, dt, tau):
     y = np.zeros(len(x))
     alpha = dt/(dt+tau)
@@ -201,7 +215,7 @@ def highpass(x, dt, tau):
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import SGDRegressor as SGD
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import StandardScaler
 
 pitch_list = []
 for i in range(N_simulations):
@@ -210,23 +224,31 @@ for i in range(N_simulations):
     pitch = interpolate(pitch, parameters.general['t_total'], parameters.general['N_steps'])
     pitch_list.append(pitch)
 
-model = SGD(alpha=0.001, max_iter=10000, verbose=100)
 
-x = np.stack(primitive_list)
-y = np.stack(pitch_list)
+for i in range(len(primitive_list)):
+    for j in range(360):
+        primitive_list[i][:, j] = highpass(primitive_list[i][:, j], parameters.general['dt'], tau=500e-3)
 
-x = highpass(primitive_list[0][0, :], parameters.general['dt'], 0.005)
-plt.plot(range(360), x)
-plt.show()
+model = SGD(alpha=0.0, max_iter=10000, verbose=100)
 
+x_train, x_test, y_train, y_test = train_test_split(primitive_list, pitch_list, test_size=0.1, random_state=42)
 
-y = scale(y)
-#plt.plot(range(1600), y[0, :])
-plt.show()
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+scaler = StandardScaler()
+scaler.fit(np.vstack(x_train))
+
+x_train = scaler.transform(np.vstack(x_train))
+x_test = scaler.transform(np.vstack(x_test))
+y_train = np.hstack(y_train)
+y_test = np.hstack(y_test)
+
 model.fit(x_train, y_train)
 score_train = model.score(x_train, y_train)
 score_test = model.score(x_test, y_test)
 
 print(score_train, score_test)
+
+y_predicted = model.predict(x_test[:parameters.general['N_steps'], :])
+
+plt.plot(range(parameters.general['N_steps']), y_predicted, y_test[:parameters.general['N_steps']])
+plt.show()
 '''

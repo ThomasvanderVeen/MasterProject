@@ -6,7 +6,7 @@ from plots import *
 from functions import *
 
 N_speeds = 19
-parameters = Parameters(max_joint_angle=180, min_joint_angle=0, N_hairs=20, t_total=10, dt=0.001, N_sims=1)
+parameters = Parameters(max_joint_angle=180, min_joint_angle=0, n_hairs=10, t_total=10, dt=0.001, n_angles=1)
 
 speeds = np.linspace(10, 190, num=N_speeds)
 ramp = (90/(speeds*parameters.general['dt'])).astype(int)

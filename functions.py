@@ -7,6 +7,14 @@ import scipy.ndimage as img
 import matplotlib.pyplot as plt
 import os
 
+
+def pickle_save(file, name):
+    with open(name, 'wb') as f:
+        pickle.dump(file, f)
+
+    return
+
+
 def pickle_open(file):
     file = open(file, 'rb')
     data = pickle.load(file)
@@ -16,7 +24,6 @@ def pickle_open(file):
 
 
 def get_firing_rate(spike_train, dt):
-
     spike_index = np.where(spike_train == 1)[0]
     inter_spike_interval = np.diff(spike_index)*dt
     firing_rate = 1/inter_spike_interval
@@ -28,7 +35,7 @@ def get_firing_rate(spike_train, dt):
     return firing_rate, spike_index
 
 
-def interpolate(old_array, t_total, n_steps, gait_boolean=False):
+def interpolate(old_array, t_total, n_steps, boolean=False):
     if len(old_array.shape) == 1:
         old_array = np.reshape(old_array, (old_array.size, 1))
 
@@ -38,9 +45,9 @@ def interpolate(old_array, t_total, n_steps, gait_boolean=False):
 
     for i in range(old_array.shape[1]):
         new_array[:, i] = np.interp(x_new, x_old, old_array[:, i])
-        if not gait_boolean:
-            new_array[:, i] = smooth_function(new_array[:, i], sig=5)
-        if gait_boolean:
+        if not boolean:
+            new_array[:, i] = gaussian_filter(new_array[:, i], sigma=5)
+        if boolean:
             new_array[:, i][new_array[:, i] > 0.5] = 1
             new_array[:, i][new_array[:, i] < 0.51] = 0
 
@@ -57,26 +64,25 @@ def define_and_initialize(class_handle, parameters):
     return neuron
 
 
-def get_primitive_indexes(N):
+def get_primitive_indexes(n):
     permutations = np.array(list(itertools.permutations([-np.inf, 0, 1, 2, 3], 3)))
     extra = np.array([0, 4, 8])
     extra = np.tile(extra, (permutations.shape[0], 1))
     permutations = permutations.astype(int) + extra
     permutations[permutations < 0] = 0
-
-    extra_2 = np.linspace(0, 12*(N-1), num=N)
+    extra_2 = np.linspace(0, 12*(n-1), num=n)
     extra_2 = np.repeat(extra_2, 180)
-
-    permutations = np.tile(np.ndarray.flatten(permutations), N) + extra_2
+    permutations = np.tile(np.ndarray.flatten(permutations), n) + extra_2
 
     return permutations
 
 
 def get_encoding(w_pos, w_vel):
-    encoding = ['none', 'Vel+', 'Vel-', 'Pos+', 'Pos-']
+    encoding = ['none', 'Vel-', 'Vel+', 'Pos-', 'Pos+']
     permutations = np.array(list(itertools.permutations(encoding, 3)))
+
     synapse_type = []
-    w = np.zeros(permutations.shape)
+    weights = np.zeros(permutations.shape)
 
     for permutation in permutations:
         if 'none' in permutation:
@@ -91,31 +97,33 @@ def get_encoding(w_pos, w_vel):
                 synapse_type.append(4)
             else:
                 synapse_type.append(3)
-    for i in range(w.shape[0]):
-        for j in range(w.shape[1]):
+    for i in range(weights.shape[0]):
+        for j in range(weights.shape[1]):
             if 'Pos' in permutations[i, j]:
-                w[i, j] = w_pos[synapse_type[i]]
+                weights[i, j] = w_pos[synapse_type[i]]
             elif 'Vel' in permutations[i, j]:
-                w[i, j] = w_vel[synapse_type[i]]
+                weights[i, j] = w_vel[synapse_type[i]]
 
     encoding_filter = [1, 0, 0, 0, 0]
-    primitive_filter = np.array(list(itertools.permutations(encoding_filter, 3)))
-    encoding_filter_2 = [0, 1, 1, 1, 1]
-    primitive_filter_2 = np.array(list(itertools.permutations(encoding_filter_2, 3)))
+    negative_mask = np.array(list(itertools.permutations(encoding_filter, 3)))
 
-    primitive_filter = np.tile(primitive_filter, (6, 1))
-    primitive_filter_2 = np.tile(primitive_filter_2, (6, 1))
-    w = np.tile(w, (6, 1))
+    encoding_filter = [0, 1, 1, 1, 1]
+    positive_mask = np.array(list(itertools.permutations(encoding_filter, 3)))
 
-    return permutations, synapse_type, w, primitive_filter, primitive_filter_2
+    negative_mask = np.tile(negative_mask, (6, 1))
+    positive_mask = np.tile(positive_mask, (6, 1))
+    weights = np.tile(weights, (6, 1))
+    synapse_type = synapse_type*6
+
+    return permutations, synapse_type, weights, negative_mask, positive_mask
 
 
-def smooth_function(inp, sig = 5):
-    minOrig = min(inp)
-    maxOrig = max(inp)
-    smoothed = img.gaussian_filter1d(inp, sig)
-    smoothStretch = minOrig + (((smoothed-min(smoothed))*(maxOrig-minOrig))/(max(smoothed)-min(smoothed)))
-    return smoothStretch
+def gaussian_filter(x, sigma=5):
+    input_min = min(x)
+    input_max = max(x)
+    x = img.gaussian_filter1d(x, sigma)
+    y = input_min + (((x-min(x))*(input_max-input_min))/(max(x)-min(x)))
+    return y
 
 
 def convert_to_bins(old_array, n_bins, sum_bool=False):
@@ -140,12 +148,11 @@ def convert_to_bins(old_array, n_bins, sum_bool=False):
 
 def get_stance_swing_bins(gait, spike_train):
     change_index = np.where(gait[:-1] != gait[1:])[0]
+    n_phases = int(change_index.size/2)-1
+    swing_bin_rate, swing_bin_likelihood, stance_bin_rate, stance_bin_likelihood = \
+        [np.zeros((n_phases, i)) for i in [10, 10, 20, 20]]
 
-    N = int(change_index.size/2)-1
-    swing_bin_rate, swing_bin_likelihood, stance_bin_rate, stance_bin_likelihood = np.zeros((N, 10)), np.zeros((N, 10)),\
-                                                                                    np.zeros((N, 20)), np.zeros((N, 20))
-
-    for i in range(N):
+    for i in range(n_phases):
         k = 0
         if gait[0] == 0:
             k = 1
@@ -172,7 +179,6 @@ def get_stance_swing_bins(gait, spike_train):
 
 def prepare_spikes_primitive(spike_velocity, spike_position, permutations, mask):
     toepel = ()
-
     for i in range(18):
         toepel += (spike_velocity[[0 + 2*i, 1 + 2*i]], spike_position[[0 + 2*i, 1 + 2*i]])
 
@@ -180,3 +186,23 @@ def prepare_spikes_primitive(spike_velocity, spike_position, permutations, mask)
     pos_vel_spikes = pos_vel_spikes[permutations].reshape((360, 3))*mask
 
     return pos_vel_spikes
+
+
+def low_pass_filter(x, dt, tau):
+    y = np.zeros(len(x))
+    alpha = dt/(dt+tau)
+    y[0] = alpha * x[0]
+    for i in np.arange(1, len(x), 1):
+        y[i] = alpha * x[i] + (1-alpha) * y[i-1]
+
+    return y
+
+
+def high_pass_filter(x, dt, tau):
+    y = np.zeros(len(x))
+    alpha = dt/(dt+tau)
+    y[0] = x[0]
+    for i in np.arange(1, len(x), 1):
+        y[i] = alpha*(y[i-1] + x[i] - x[i-1])
+
+    return y
