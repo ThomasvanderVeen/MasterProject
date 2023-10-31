@@ -7,7 +7,7 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 2
+N_simulations = 20
 w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
 w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
 _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
@@ -63,7 +63,7 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
 
     primitive_list.append(spike_primitive.numpy()), joint_angles_list.append(joint_angles)
 
-#pickle_save(primitive_list, 'primitive_list')
+pickle_save(primitive_list, 'Data/primitive_list')
 
 
 '''
@@ -252,3 +252,12 @@ y_predicted = model.predict(x_test[:parameters.general['N_steps'], :])
 plt.plot(range(parameters.general['N_steps']), y_predicted, y_test[:parameters.general['N_steps']])
 plt.show()
 '''
+
+'''
+Body pitch weight estimation
+'''
+
+
+
+spike_primitive = primitive_list[0]
+

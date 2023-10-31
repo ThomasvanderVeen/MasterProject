@@ -13,6 +13,7 @@ N_frames = 200*t_total
 data = {}
 i = 0
 legs = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
+steps = '_00_'
 
 animals_list = os.listdir(path)
 for animal in animals_list:
@@ -48,9 +49,9 @@ for animal in animals_list:
                     data[f"simulation_{i}"] = [joint_angles, gaits, pitch]
                     i += 1
                 else:
-                    print(f'[1. skipped file {np.min(N)}]')
+                    print(f'[1. skipped file: N = {np.min(N)}, gait size, N_frames = {gait.size, N_frames}, _00_ in {steps in file_path}]')
             except:
-                print(f'[2. skipped file {file_path}]')
+                print(f'[2. Skipped file: unhealthy stick insect]')
 
 print(f'[{i} simulations saved]')
 file = open('Data/simulation_data', 'wb')
