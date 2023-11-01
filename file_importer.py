@@ -8,12 +8,12 @@ else:
     path = "/home/s3488926/Documents/master_project/drive/Kinematic_Data"
     print("Linux path used")
 
-t_total = 6
+t_total = 20
 N_frames = 200*t_total
 data = {}
 i = 0
 legs = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
-steps = '_00_'
+steps = '_48_'
 
 animals_list = os.listdir(path)
 for animal in animals_list:
@@ -33,7 +33,7 @@ for animal in animals_list:
                     change_index = np.where(gait[:-1] != gait[1:])[0]
                     N[j] = int(change_index.size / 2) - 1
                 gait = np.ndarray.flatten(np.array([simulation_file['gait'][0][0][0][:, 0]]))
-                if gait.size > N_frames and np.min(N) > 1 and '_00_' in file_path:
+                if gait.size > N_frames and np.min(N) > 1 and steps in file_path:
                     for leg in range(6):
                         for joint in range(3):
                             if joint == 1:
@@ -49,7 +49,7 @@ for animal in animals_list:
                     data[f"simulation_{i}"] = [joint_angles, gaits, pitch]
                     i += 1
                 else:
-                    print(f'[1. skipped file: N = {np.min(N)}, gait size, N_frames = {gait.size, N_frames}, _00_ in {steps in file_path}]')
+                    print(f'[1. skipped file: N = {np.min(N)}, gait size, N_frames = {gait.size, N_frames}, {steps} in {steps in file_path}]')
             except:
                 print(f'[2. Skipped file: unhealthy stick insect]')
 

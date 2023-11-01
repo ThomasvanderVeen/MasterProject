@@ -206,3 +206,22 @@ def high_pass_filter(x, dt, tau):
         y[i] = alpha*(y[i-1] + x[i] - x[i-1])
 
     return y
+
+
+def normalize(x, maximum=False, minimum=False, t_0=0, t_1=1):
+    if not maximum:
+        y = (x-np.min(x))/(np.max(x) - np.min(x))*(t_1-t_0)+t_0
+    else:
+        y = (x - maximum) / (maximum - minimum)*(t_1-t_0)+t_0
+
+    return y
+
+
+def get_firing_rate_2(spike_train, dt, t, sigma=5):
+    n = int(t/dt)
+    firing_rate = np.empty(spike_train.shape)
+    for i in range(n, spike_train.size-n):
+        firing_rate[n + i] = np.sum(spike_train[i:i+n])
+    firing_rate[firing_rate < 2] = np.mean(firing_rate)
+    firing_rate = gaussian_filter(firing_rate, sigma)
+    return firing_rate

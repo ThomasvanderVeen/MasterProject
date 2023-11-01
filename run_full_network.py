@@ -7,7 +7,7 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 20
+N_simulations = 12
 w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
 w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
 _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
@@ -20,7 +20,7 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     joint_angles = np.array(data[f'simulation_{k}'][0]).T
 
     parameters = Parameters(max_joint_angle=np.amax(joint_angles, axis=0), min_joint_angle=np.amin(joint_angles, axis=0),
-                            n_hairs=20, t_total=5.5, dt=0.001, n_angles=18)
+                            n_hairs=20, t_total=20, dt=0.001, n_angles=18)
     parameters.primitive['w'] = weights_primitive
 
     N_frames = parameters.general['N_frames']
@@ -64,6 +64,7 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     primitive_list.append(spike_primitive.numpy()), joint_angles_list.append(joint_angles)
 
 pickle_save(primitive_list, 'Data/primitive_list')
+pickle_save(joint_angles_list, 'Data/joint_angles_list')
 
 
 '''
@@ -189,75 +190,3 @@ for m in tqdm(range(6), desc='PSTH plot progress'):
         ax.scatter(np.linspace(.525, 1.5, num=20), stance_bin_likelihood[i, :], color='blue', marker='^')
 
         plot_psth(ax, fig, i, m)
-
-'''
-Body pitch estimation
-'''
-'''
-tau = [50e-3, 100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3]
-
-def lowpass(x,dt,tau):
-    y = np.zeros(len(x))
-    alpha = dt/(dt+tau)
-    y[0] = alpha * x[0]
-    for i in np.arange(1,len(x),1):
-        y[i] = alpha * x[i] + (1-alpha) * y[i-1]
-    return y
-
-
-def highpass(x, dt, tau):
-    y = np.zeros(len(x))
-    alpha = dt/(dt+tau)
-    y[0] = x[0]
-    for i in np.arange(1,len(x),1):
-        y[i] = alpha*(y[i-1] + x[i] - x[i-1])
-    return y
-
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import SGDRegressor as SGD
-from sklearn.preprocessing import StandardScaler
-
-pitch_list = []
-for i in range(N_simulations):
-    pitch = np.array(data[f'simulation_{i}'][2])
-    pitch = pitch[:parameters.general['N_frames']]
-    pitch = interpolate(pitch, parameters.general['t_total'], parameters.general['N_steps'])
-    pitch_list.append(pitch)
-
-
-for i in range(len(primitive_list)):
-    for j in range(360):
-        primitive_list[i][:, j] = highpass(primitive_list[i][:, j], parameters.general['dt'], tau=500e-3)
-
-model = SGD(alpha=0.0, max_iter=10000, verbose=100)
-
-x_train, x_test, y_train, y_test = train_test_split(primitive_list, pitch_list, test_size=0.1, random_state=42)
-
-scaler = StandardScaler()
-scaler.fit(np.vstack(x_train))
-
-x_train = scaler.transform(np.vstack(x_train))
-x_test = scaler.transform(np.vstack(x_test))
-y_train = np.hstack(y_train)
-y_test = np.hstack(y_test)
-
-model.fit(x_train, y_train)
-score_train = model.score(x_train, y_train)
-score_test = model.score(x_test, y_test)
-
-print(score_train, score_test)
-
-y_predicted = model.predict(x_test[:parameters.general['N_steps'], :])
-
-plt.plot(range(parameters.general['N_steps']), y_predicted, y_test[:parameters.general['N_steps']])
-plt.show()
-'''
-
-'''
-Body pitch weight estimation
-'''
-
-
-
-spike_primitive = primitive_list[0]
-

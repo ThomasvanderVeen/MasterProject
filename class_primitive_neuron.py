@@ -74,7 +74,7 @@ class LIF_primitive(nn.Module):
         I = self.state.I
 
         V += self.dt*(self.V_R-V)/self.tau
-        V += torch.sum(w*input, dim=1)
+        V += torch.sum(w*input, dim=-1)
 
         spk = activation(V - self.V_T)
         count_refr = self.refr*spk + (1-spk)*(count_refr-1)

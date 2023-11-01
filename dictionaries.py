@@ -22,3 +22,6 @@ class Parameters:
 
         self.primitive = {'tau': 50e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 360, 'w': 0,
                           'N_input': 3, 'dt': dt, 'refrac': 0}
+
+        self.posture = {'tau': 50e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 1, 'w': 0,
+                          'N_input': 360, 'dt': dt, 'refrac': 0}
