@@ -8,7 +8,7 @@ from scipy import signal
 
 N_simulations = 1
 parameters = Parameters(t_total=20, dt=0.001)
-i = 0
+sim = 4
 primitive_list = pickle_open('Data/primitive_list')
 joint_angles_list = pickle_open('Data/joint_angles_list')
 data = pickle_open('Data/simulation_data')
@@ -21,7 +21,7 @@ permutations = get_primitive_indexes(6)
 N_legs = 6
 true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 360)) for _ in range(4)]
 
-joint_angles, spike_primitive = joint_angles_list[0], primitive_list[0]
+joint_angles, spike_primitive = joint_angles_list[sim], primitive_list[sim]
 ground_truth, ground_vel, ground_pos = [np.zeros([parameters.general['N_steps'], i]) for i in [360, 36, 36]]
 N_joints = joint_angles.shape[1]
 
@@ -42,8 +42,8 @@ for j in range(parameters.general['N_steps']):
 
 
 for i in range(N_simulations):
-    pitch = np.array(data[f'simulation_{1}'][2][1, :])
-    spike_primitive = ground_truth
+    pitch = np.array(data[f'simulation_{i}'][2][1, :])
+    spike_primitive = primitive_list[i]
     pitch = pitch[:parameters.general['N_frames']]
     pitch = interpolate(pitch, parameters.general['t_total'], parameters.general['N_steps'])
 
@@ -82,11 +82,12 @@ weights = pickle_open('Data/weights_pitch')
 ground_truth = pickle_open('Data/ground_truth')
 weights = np.nan_to_num(weights)
 
-parameters.posture['w'] = weights/5000
+parameters.posture['w'] = weights/200
+#parameters.posture['w'] = np.ones(360)/300
 parameters.posture['tau'] = 50e-3
 posture_neuron = define_and_initialize(LIF_primitive, parameters.posture)
 
-spike_primitive = primitive_list[0]
+spike_primitive = primitive_list[sim]
 spike_posture, voltage, time = np.empty(parameters.general['N_steps']), np.empty(parameters.general['N_steps']), np.array([])
 
 fig, ax3 = plt.subplots()
@@ -94,12 +95,16 @@ ax4 = ax3.twinx()
 
 for i in tqdm(range(parameters.general['N_steps'])):
     time = np.append(time, i * parameters.general['dt'])
-    voltage[i], spike_posture[i] = posture_neuron.forward(torch.from_numpy(ground_truth[i, :]))
+    voltage[i], spike_posture[i] = posture_neuron.forward(torch.from_numpy(spike_primitive[i, :]))
     #print(torch.from_numpy(ground_truth[i, :]))
+
+#plt.plot(time, voltage)
+#plt.show()
 
 
 #firing_rate, spikes_index = get_firing_rate(spike_posture, parameters.general['dt'])
 firing_rate = get_firing_rate_2(spike_posture, parameters.general['dt'], 0.25)
+firing_rate = gaussian_filter(firing_rate)
 difference = np.mean(np.absolute(normalize(firing_rate) - normalize(pitch)))
 fig.text(0.65, 0.85, difference)
 ax3.plot(time, firing_rate, color='b')

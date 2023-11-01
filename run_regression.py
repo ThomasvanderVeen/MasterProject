@@ -42,13 +42,16 @@ for t in tqdm(tau):
     model.fit(x_train, y_train)
     score_train = model.score(x_train, y_train)
     score_test = model.score(x_test, y_test)
-
+    print(len(model.coef_))
     train.append(score_train)
     test.append(score_test)
 
     print(score_train, score_test)
 
     y_predicted = model.predict(x_test)
+
+#weights = model.coef_
+#pickle_save(weights, 'Data/weights_pitch')
 
 plt.scatter(tau, train)
 plt.scatter(tau, test)
