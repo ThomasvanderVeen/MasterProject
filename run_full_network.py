@@ -14,7 +14,7 @@ _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_e
 permutations = get_primitive_indexes(6)
 data = pickle_open('Data/simulation_data')
 
-joint_angles_list, primitive_list = [], []
+joint_angles_list, primitive_list, position_list, velocity_list = [], [], [], []
 
 for k in tqdm(range(N_simulations), desc='Network progress'):
     joint_angles = np.array(data[f'simulation_{k}'][0]).T
@@ -61,10 +61,12 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
 
         _, spike_primitive[i, :] = primitive_neuron.forward(pos_vel_spikes)
 
-    primitive_list.append(spike_primitive.numpy()), joint_angles_list.append(joint_angles)
+    primitive_list.append(spike_primitive.numpy()), joint_angles_list.append(joint_angles), position_list.append(spike_position.numpy()), velocity_list.append(spike_velocity.numpy())
 
 pickle_save(primitive_list, 'Data/primitive_list')
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
+pickle_save(position_list, 'Data/position_list')
+pickle_save(velocity_list, 'Data/velocity_list')
 
 
 '''

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from class_primitive_neuron import LIF_primitive
 from scipy import signal
 
-N_simulations = 1
+N_simulations = 12
 parameters = Parameters(t_total=20, dt=0.001)
 sim = 4
 primitive_list = pickle_open('Data/primitive_list')
@@ -21,29 +21,27 @@ permutations = get_primitive_indexes(6)
 N_legs = 6
 true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 360)) for _ in range(4)]
 
-joint_angles, spike_primitive = joint_angles_list[sim], primitive_list[sim]
-ground_truth, ground_vel, ground_pos = [np.zeros([parameters.general['N_steps'], i]) for i in [360, 36, 36]]
-N_joints = joint_angles.shape[1]
+for k in range(N_simulations):
+    joint_angles, spike_primitive = joint_angles_list[k], primitive_list[k]
+    ground_truth, ground_vel, ground_pos = [np.zeros([parameters.general['N_steps'], i]) for i in [360, 36, 36]]
+    N_joints = joint_angles.shape[1]
+    for i in range(N_joints):
+        mid = np.max(joint_angles[:, i]) / 2 + np.min(joint_angles[:, i]) / 2
+        diff = np.diff(joint_angles[:, i])
+        ground_vel[np.where(diff < 0), 0 + 2 * i] = 1
+        ground_vel[np.where(diff > 0), 1 + 2 * i] = 1
+        ground_pos[np.where(joint_angles[:, i] < mid), 0 + 2 * i] = 1
+        ground_pos[np.where(joint_angles[:, i] > mid), 1 + 2 * i] = 1
 
-for i in range(N_joints):
-    mid = np.max(joint_angles[:, i]) / 2 + np.min(joint_angles[:, i]) / 2
-    diff = np.diff(joint_angles[:, i])
-    ground_vel[np.where(diff < 0), 0 + 2 * i] = 1
-    ground_vel[np.where(diff > 0), 1 + 2 * i] = 1
-    ground_pos[np.where(joint_angles[:, i] < mid), 0 + 2 * i] = 1
-    ground_pos[np.where(joint_angles[:, i] > mid), 1 + 2 * i] = 1
+    for j in range(parameters.general['N_steps']):
+        ground_truth_2 = prepare_spikes_primitive(torch.from_numpy(ground_vel[j, :]), torch.from_numpy(ground_pos[j, :]),
+                                                  permutations, primitive_filter) + primitive_filter_2
+        ground_truth_2 = torch.sum(ground_truth_2, dim=1)
+        ground_truth[j, ground_truth_2 > 2.9] = 1
+        ground_truth[j, ground_truth_2 < 2.9] = 0
 
-for j in range(parameters.general['N_steps']):
-    ground_truth_2 = prepare_spikes_primitive(torch.from_numpy(ground_vel[j, :]), torch.from_numpy(ground_pos[j, :]),
-                                              permutations, primitive_filter) + primitive_filter_2
-    ground_truth_2 = torch.sum(ground_truth_2, dim=1)
-    ground_truth[j, ground_truth_2 > 2.9] = 1
-    ground_truth[j, ground_truth_2 < 2.9] = 0
-
-
-for i in range(N_simulations):
-    pitch = np.array(data[f'simulation_{i}'][2][1, :])
-    spike_primitive = primitive_list[i]
+    pitch = np.array(data[f'simulation_{k}'][2][1, :])
+    spike_primitive = ground_truth
     pitch = pitch[:parameters.general['N_frames']]
     pitch = interpolate(pitch, parameters.general['t_total'], parameters.general['N_steps'])
 
@@ -53,7 +51,7 @@ for i in range(N_simulations):
         correlation = spikes*pitch/(np.sum(spikes)+1)
         #correlation = spikes * pitch
 
-        correlation_pos[j, i] = np.mean(correlation)
+        correlation_pos[j, k] = np.mean(correlation)
 
 
 #weights = np.ndarray.flatten((correlation_pos-correlation_neg)/(correlation_pos+correlation_neg))
@@ -92,7 +90,7 @@ spike_posture, voltage, time = np.empty(parameters.general['N_steps']), np.empty
 
 fig, ax3 = plt.subplots()
 ax4 = ax3.twinx()
-
+spike_primitive = primitive_list[sim]
 for i in tqdm(range(parameters.general['N_steps'])):
     time = np.append(time, i * parameters.general['dt'])
     voltage[i], spike_posture[i] = posture_neuron.forward(torch.from_numpy(spike_primitive[i, :]))

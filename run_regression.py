@@ -12,9 +12,13 @@ parameters = Parameters(t_total=20, dt=0.001)
 tau = [50e-3, 100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3]
 tau = [750e-3]
 
-test, train = [], []
+interneuron_list, test, train = [], [], []
 for t in tqdm(tau):
     primitive_list = pickle_open('Data/primitive_list')
+    position_list = pickle_open('Data/position_list')
+    velocity_list = pickle_open('Data/velocity_list')
+    for k in range(len(position_list)):
+        interneuron_list.append(np.hstack((position_list[k], velocity_list[k])))
     pitch_list = []
     for i in range(N_simulations):
         pitch = np.array(data[f'simulation_{i}'][2][1, :])
@@ -23,8 +27,11 @@ for t in tqdm(tau):
 
     for i in range(N_simulations):
         primitive_list[i] = convert_to_bins(primitive_list[i], parameters.general['N_frames']).astype(float)
+        interneuron_list[i] = convert_to_bins(interneuron_list[i], parameters.general['N_frames']).astype(float)
         for j in range(360):
             primitive_list[i][:, j] = low_pass_filter(primitive_list[i][:, j], 1/200, tau=t)
+        for j in range(position_list[0].shape[1]):
+            interneuron_list[i][:, j] = low_pass_filter(interneuron_list[i][:, j], 1/200, tau=t)
 
     model = SGD(alpha=0.000, max_iter=10000, verbose=100)
 
@@ -42,13 +49,14 @@ for t in tqdm(tau):
     model.fit(x_train, y_train)
     score_train = model.score(x_train, y_train)
     score_test = model.score(x_test, y_test)
-    print(len(model.coef_))
+
     train.append(score_train)
     test.append(score_test)
 
     print(score_train, score_test)
 
-    y_predicted = model.predict(x_test)
+    y_predicted_train = model.predict(x_train)
+    y_predicted_test = model.predict(x_test)
 
 #weights = model.coef_
 #pickle_save(weights, 'Data/weights_pitch')
@@ -57,6 +65,10 @@ plt.scatter(tau, train)
 plt.scatter(tau, test)
 plt.show()
 
-plt.plot(range(y_predicted.size), gaussian_filter(y_predicted))
-plt.plot(range(y_predicted.size), y_test)
+plt.plot(range(y_predicted_train.size), gaussian_filter(y_predicted_train))
+plt.plot(range(y_predicted_train.size), y_train)
+plt.show()
+
+plt.plot(range(y_predicted_test.size), gaussian_filter(y_predicted_test))
+plt.plot(range(y_predicted_test.size), y_test)
 plt.show()
