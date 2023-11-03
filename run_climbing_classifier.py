@@ -7,7 +7,7 @@ data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
 parameters = Parameters(t_total=20, dt=0.001)
 
-N_simulations = 2
+N_simulations = 12
 sim = 0
 
 pitch = np.empty((parameters.general['N_steps'], N_simulations))
@@ -35,10 +35,10 @@ for j in range(360):
         bin_2 += np.histogram(incidence, bins=60, range=(pitch_min, pitch_max))[0]
         bin_pitch += np.histogram(pitch[:, i], bins=N_bins, range=(pitch_min, pitch_max))[0]
 
-    ratio = bin[0]/bin[1]
+    ratio = bin[1]/bin[0]
 
-    if ratio < 1/2:
-        weights[j] = 1E-3
+    if ratio > 1.5:
+        weights[j] = 0.5E-3
 
 parameters.posture['w'] = weights.T
 posture_neuron = define_and_initialize(LIF_primitive, parameters.posture)
