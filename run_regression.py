@@ -8,7 +8,7 @@ from dictionaries import Parameters
 primitive_list = pickle_open('Data/primitive_list')
 data = pickle_open('Data/simulation_data')
 N_simulations = len(primitive_list)
-parameters = Parameters(t_total=20, dt=0.001)
+parameters = Parameters(t_total=20, dt=0.0003)
 tau = [50e-3, 100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3]
 tau = [750e-3]
 
@@ -57,9 +57,6 @@ for t in tqdm(tau):
 
     y_predicted_train = model.predict(x_train)
     y_predicted_test = model.predict(x_test)
-
-#weights = model.coef_
-#pickle_save(weights, 'Data/weights_pitch')
 
 plt.scatter(tau, train)
 plt.scatter(tau, test)

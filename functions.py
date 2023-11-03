@@ -217,7 +217,7 @@ def normalize(x, maximum=False, minimum=False, t_0=0, t_1=1):
     return y
 
 
-def get_firing_rate_2(spike_train, dt, t, sigma=5):
+def get_firing_rate_2(spike_train, dt, t=0.5, sigma=5):
     n = int(t/dt)
     firing_rate = np.empty(spike_train.shape)
     for i in range(n, spike_train.size-n):
