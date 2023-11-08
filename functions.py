@@ -6,6 +6,7 @@ import itertools
 import scipy.ndimage as img
 import matplotlib.pyplot as plt
 import os
+import pandas as pd
 
 
 def pickle_save(file, name):

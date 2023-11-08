@@ -2,8 +2,8 @@ from dictionaries import Parameters
 from class_sensory_neuron import AdEx
 from plots import *
 from functions import *
-import seaborn as sns
 import pandas as pd
+
 
 class RampGenerator:
     def __init__(self, parameters_ramp, device=None):
@@ -36,14 +36,14 @@ v_var, v_stat = np.array([24, 47, 88, 151, 245]), 47
 max_angle_var, max_angle_stat = np.array([15, 23, 34, 46, 60]), 37
 parameters = Parameters(max_joint_angle=1, min_joint_angle=1, n_hairs=1, t_total=10, dt=0.0001, n_angles=1)
 parameters.sensory['n'] = 5
-
 t_total = 10
 colors = ['green', 'yellow', 'blue', 'black', 'red']
 spike_rates, spike_rates_list = [], []
 times, times_list = [], []
-Vr_list = np.linspace(-70, -50, num=5)*1E-3
-b_list = np.linspace(1e-12, 26e-12, num=5)
+Vr_list = np.linspace(-80, -60, num=11, dtype=int)*1E-3
+b_list = np.linspace(1, 22, num=11, dtype=int)*1e-12
 MSE = np.zeros((Vr_list.size, b_list.size))
+
 for l in tqdm(range(Vr_list.size)):
     for m in range(b_list.size):
         for [v, max_angle] in [[v_var, max_angle_stat], [v_stat, max_angle_var]]:
@@ -95,11 +95,10 @@ for l in tqdm(range(Vr_list.size)):
             spike_rates, times = [], []
 
 
-MSE = MSE/(real_values.size)
+MSE = MSE/real_values.size
 MSE_flat = np.ndarray.flatten(MSE)
 indexes, index_flat = np.where(MSE == np.min(MSE)), np.where(MSE_flat == np.min(MSE_flat))
 Vr_opt, b_opt = Vr_list[indexes[0]], b_list[indexes[1]]
-print(f'Optimum Vr {Vr_opt}, Optimum b: {b_opt}')
 spike_rates = spike_rates_list[index_flat[0][0]*2+1]
 times = times_list[index_flat[0][0]*2+1]
 
@@ -109,15 +108,12 @@ plot_single_hair(plt.gca(), v_stat)
 
 spike_rates = spike_rates_list[index_flat[0][0]*2]
 times = times_list[index_flat[0][0]*2]
+
 for i in range(len(spike_rates)):
     plt.plot(times[i], spike_rates[i])
 plot_single_hair(plt.gca(), v_var)
 
-df = pd.DataFrame(MSE.astype(int), columns=Vr_list, index=b_list)
+df = pd.DataFrame(MSE.astype(int), columns=np.around(b_list, 15), index=np.around(Vr_list, 5))
+plot_heat_map(df)
 
-
-heatmap = sns.heatmap(data=df, annot=True, fmt='.3g', cbar_kws={'label': 'mean absolute error (MAE)'})
-heatmap.set(xlabel='V_R', ylabel='b')
-
-plt.show()
-
+print(f'[Single hair] Optimum Vr {Vr_opt}, Optimum b: {b_opt}')

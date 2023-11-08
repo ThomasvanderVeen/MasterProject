@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 from matplotlib.lines import Line2D
+import seaborn as sns
 
 if not os.path.exists("Images"):
     os.makedirs("Images")
@@ -19,16 +20,25 @@ def plot_single_hair(ax, v):
 
     if isinstance(v, int):
         ax.legend(['15°', '23°', '34°', '46°', '60°'])
+        ax.set_yticks([0, 40, 80, 120, 160, 200, 240, 280])
         fig.tight_layout(pad=0.5)
         fig.savefig('Images/angle.png')
     else:
         ax.legend(['24 °/s', '47 °/s', '88 °/s', '151 °/s', '245 °/s'])
+        ax.set_yticks([0, 40, 80, 120, 160])
         fig.tight_layout(pad=0.5)
         fig.savefig('Images/angular_velocity.png')
 
     fig.clear()
 
     return
+
+
+def plot_heat_map(df):
+    heatmap = sns.heatmap(data=df, annot=True, fmt='.3g', cbar_kws={'label': 'mean absolute error (MAE)'})
+    heatmap.set(xlabel='b', ylabel='V_r')
+    plt.tight_layout(pad=0.5)
+    plt.savefig('Images/heat_map')
 
 
 def plot_hair_field(ax, name):
@@ -126,3 +136,6 @@ def plot_psth(ax, fig, neuron, leg):
     ax.set_xticks([])
     fig.savefig(f'Images_PSTH/neuron_{neuron}_leg_{leg}')
     plt.cla()
+
+
+

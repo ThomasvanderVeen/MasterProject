@@ -10,7 +10,7 @@ class Parameters:
                            'max_joint_angle': max_joint_angle, 'max_angle': 90, 'overlap': 0, 'overlap_bi': 0}
 
         self.sensory = {'C': 200e-12, 'g_L': 2e-9, 'E_L': -70e-3, 'DeltaT': 2e-3, 'a': 2e-9, 'V_T': -50e-3,
-                        'tau_W': 600e-3, 'b': 60e-12, 'V_R': -58e-3, 'V_cut': -40e-3, 'refrac': 0.00,
+                        'tau_W': 600e-3, 'b': 7e-12, 'V_R': -70e-3, 'V_cut': -40e-3, 'refrac': 0.00,
                         'n': 2 * n_hairs * n_angles, 'dt': dt}
 
         self.position = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 80e-3, 'tau_W': 5e-3, 'tau_epsp': 6e-3, 'b': 20e-3,

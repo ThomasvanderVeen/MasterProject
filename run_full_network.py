@@ -7,7 +7,7 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 15
+N_simulations = 2
 w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
 w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
 _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
@@ -20,7 +20,7 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     joint_angles = np.array(data[f'simulation_{k}'][0]).T
 
     parameters = Parameters(max_joint_angle=np.amax(joint_angles, axis=0), min_joint_angle=np.amin(joint_angles, axis=0),
-                            n_hairs=20, t_total=20, dt=0.001, n_angles=18)
+                            n_hairs=20, t_total=6, dt=0.001, n_angles=18)
     parameters.primitive['w'] = weights_primitive
 
     N_frames = parameters.general['N_frames']
@@ -68,7 +68,6 @@ pickle_save(joint_angles_list, 'Data/joint_angles_list')
 pickle_save(position_list, 'Data/position_list')
 pickle_save(velocity_list, 'Data/velocity_list')
 
-
 '''
 Position neuron testing
 '''
@@ -113,6 +112,32 @@ plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 0], color='blue')
 plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 1], color='red')
 
 plot_movement_interneuron_network(ax, fig)
+
+TP, FP, TN, FN = [], [], [], []
+for i in range(len(joint_angles_list)):
+    spike_velocity, joint_angles = velocity_list[i], joint_angles_list[i]
+    joint_velocity = np.diff(joint_angles, axis=0)
+
+    intersect_up = joint_velocity * spike_velocity[1:, 1::2]
+    intersect_down = joint_velocity * spike_velocity[1:, 0::2]
+    TP.append(intersect_up[intersect_up > 0].size)
+    FP.append(intersect_up[intersect_up < 0].size)
+    TN.append(intersect_down[intersect_down < 0].size)
+    FN.append(intersect_down[intersect_down > 0].size)
+
+TP, FP, TN, FN = sum(TP), sum(FP), sum(TN), sum(FN)
+ACC = np.around((TP + TN) / (TP + TN + FP + FN), 3)
+TPR = np.around(TP/(TP + FN), 3)
+TNR = np.around(TN/(TN + FP), 3)
+
+print(f'[Velocity interneuron] True positive: {TP}, false Positive: {FP}, true negative: {TN}, false negative: {FN}')
+print(f'[Velocity interneuron] Accuracy: {ACC}, true positive rate: {TPR}, true negative rate: {TNR}')
+
+table = {'col1': [TP, FP, TN, FN, ACC, TPR, TNR]}
+df = pd.DataFrame(data=table, index=['TP', 'FP', 'TN', 'FN', 'ACC', 'TPR', 'TNR'])
+df.to_csv("Images/velocity_table.csv")
+
+print(f'[Velocity interneuron] Data written to "velocity_table.csv"')
 
 '''
 Primitive neuron testing (ROC plot)
@@ -159,10 +184,21 @@ true_pos_sum = np.sum(true_positive, axis=0)
 false_pos_sum = np.sum(false_positive, axis=0)
 true_neg_sum = np.sum(true_negative, axis=0)
 false_neg_sum = np.sum(false_negative, axis=0)
+accuracy, accuracy_types = np.array([]), np.zeros([5])
+N_types = np.bincount(synapse_type)
 
 for i in range(360):
     plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
                 true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
+    ACC = (true_pos_sum[i] + true_neg_sum[i])/(true_pos_sum[i] + true_neg_sum[i] + false_pos_sum[i] + false_neg_sum[i] + 0.0000001)
+    accuracy = np.append(accuracy, ACC)
+    accuracy_types[synapse_type[i]] += ACC/N_types[synapse_type[i]]
+
+accuracy_mean = np.mean(accuracy)
+
+print(f'[Primitive neuron] Mean accuracy of primitive neurons: {accuracy_mean}')
+print(f'[Primitive neuron] and of type vel-pos: {np.around(accuracy_types[0], 3)}, vel-vel: {np.around(accuracy_types[1], 3)}, pos-pos: '
+      f'{np.around(accuracy_types[2], 3)}, pos-vel-vel: {np.around(accuracy_types[3], 3)}, vel-pos-pos: {np.around(accuracy_types[4], 3)}.')
 
 plt.plot([0, 1], [0, 1], color='red', linestyle='dotted')
 plot_primitive_ROC(ax, fig)
