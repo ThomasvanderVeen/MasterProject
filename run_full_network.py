@@ -146,6 +146,7 @@ Primitive neuron testing (ROC plot)
 N_joints = joint_angles.shape[1]
 N_legs = 6
 true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 360)) for _ in range(4)]
+ground_truth_list = []
 for k in tqdm(range(N_simulations), desc='ROC plot progress'):
     joint_angles, spike_primitive = joint_angles_list[k], primitive_list[k]
     ground_truth, ground_vel, ground_pos = [np.zeros([parameters.general['N_steps'], i]) for i in [360, 36, 36]]
@@ -165,6 +166,8 @@ for k in tqdm(range(N_simulations), desc='ROC plot progress'):
         ground_truth[j, ground_truth_2 > 2.9] = 1
         ground_truth[j, ground_truth_2 < 2.9] = 0
 
+    ground_truth_list.append(ground_truth)
+
     ground_truth_bins = convert_to_bins(ground_truth, 100)
     spike_primitive_bins = convert_to_bins(spike_primitive, 100)
 
@@ -177,8 +180,7 @@ for k in tqdm(range(N_simulations), desc='ROC plot progress'):
         true_negative[k, i] = intersect[intersect < 0.5].size
         false_negative[k, i] = difference[difference < -0.5].size
 
-fig, ax = plt.subplots()
-colors = ['blue', 'black', 'green', 'yellow', 'orange']
+pickle_save(ground_truth_list, 'Data/ground_truth')
 
 true_pos_sum = np.sum(true_positive, axis=0)
 false_pos_sum = np.sum(false_positive, axis=0)
@@ -186,6 +188,9 @@ true_neg_sum = np.sum(true_negative, axis=0)
 false_neg_sum = np.sum(false_negative, axis=0)
 accuracy, accuracy_types = np.array([]), np.zeros([5])
 N_types = np.bincount(synapse_type)
+
+fig, ax = plt.subplots()
+colors = ['blue', 'black', 'green', 'yellow', 'orange']
 
 for i in range(360):
     plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
