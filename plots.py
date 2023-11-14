@@ -2,13 +2,15 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 from matplotlib.lines import Line2D
+import matplotlib
 import seaborn as sns
 
 if not os.path.exists("Images"):
     os.makedirs("Images")
 
-colors = ['r', 'k', 'b', 'y', 'g', 'purple']
-
+colors = ['#c1272d', '#0000a7', '#eecc16', '#008176', '#b3b3b3']
+matplotlib.rc('xtick', labelsize=10)
+matplotlib.rc('ytick', labelsize=10)
 
 def plot_single_hair(ax, v):
     fig = plt.figure(1, figsize=(10, 6))
@@ -137,5 +139,32 @@ def plot_psth(ax, fig, neuron, leg):
     fig.savefig(f'Images_PSTH/neuron_{neuron}_leg_{leg}')
     plt.cla()
 
+    return
 
 
+def plot_primitive_accuracy(ax, fig, tau_list):
+    ax.set_xlabel('τ [ms]', fontsize=15)
+    ax.set_ylabel("Accuracy", fontsize=15)
+    ax.set_xticks(1000*tau_list[::2])
+    ax.legend(['v-p', 'v-v', 'p-p', 'p-v-v', 'v-p-p', 'mean'], loc='lower right')
+    fig.tight_layout(pad=0.5)
+    fig.savefig('Images/primitive_accuracy')
+
+    return
+
+
+def plot_primitive_weights(ax, fig, tau_list, w_1, w_2):
+    ax[0].grid(True, axis='y')
+    ax[1].grid(True, axis='y')
+    ax[0].set_xticks([])
+    ax[1].set_xticks(1000*tau_list[::2])
+    ax[0].set_yticks(1000*w_1[::2])
+    ax[1].set_yticks(1000*w_2[::2])
+    ax[0].set_ylabel('w_pos [mV]', fontsize=15)
+    ax[1].set_ylabel('w_vel [mV]', fontsize=15)
+    fig.legend(['v-p', 'v-v', 'p-p', 'p-v-v', 'v-p-p'], loc='upper center', bbox_to_anchor=(1.08, 0.75))
+    fig.supxlabel('τ [ms]', fontsize=15)
+    fig.tight_layout(pad=0.5)
+    fig.savefig('Images/primitive_weights', bbox_inches='tight')
+
+    return

@@ -14,13 +14,13 @@ _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_e
 permutations = get_primitive_indexes(6)
 data = pickle_open('Data/simulation_data')
 
-joint_angles_list, primitive_list, position_list, velocity_list = [], [], [], []
+joint_angles_list, primitive_list, position_list, velocity_list, sensory_list = [], [], [], [], []
 
 for k in tqdm(range(N_simulations), desc='Network progress'):
     joint_angles = np.array(data[f'simulation_{k}'][0]).T
 
     parameters = Parameters(max_joint_angle=np.amax(joint_angles, axis=0), min_joint_angle=np.amin(joint_angles, axis=0),
-                            n_hairs=20, t_total=6, dt=0.001, n_angles=18)
+                            n_hairs=20, t_total=20, dt=0.001, n_angles=18)
     parameters.primitive['w'] = weights_primitive
 
     N_frames = parameters.general['N_frames']
@@ -32,10 +32,11 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
 
     hair_angles = np.zeros((joint_angles.shape[0], 2*joint_angles.shape[1]*parameters.hair_field['N_hairs']))
 
-    for i in range(parameters.general['N_sims']):
+    for i in range(18):
         hair_field = HairField(parameters.hair_field)
         hair_field.reset_max_min(i)
         hair_field.get_double_receptive_field()
+
         hair_angles[:, i * 2 * parameters.hair_field['N_hairs']: 2 * parameters.hair_field['N_hairs']
                     + i * 2 * parameters.hair_field['N_hairs']] = hair_field.get_hair_angle(joint_angles[:, i])/37e9
 
@@ -55,18 +56,22 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
         reshaped_spikes = torch.reshape(spike_sensory[i, :], (parameters.velocity['n'], (parameters.hair_field['N_hairs'])))
 
         _, spike_velocity[i, :] = velocity_neuron.forward(reshaped_spikes)
-        _, spike_position[i, :] = position_neuron.forward(reshaped_spikes[:, int(parameters.hair_field['N_hairs']/2):])
+        _, spike_position[i, :] = position_neuron.forward(reshaped_spikes[:, int(parameters.hair_field['N_hairs']/2)-1:])
 
         pos_vel_spikes = prepare_spikes_primitive(spike_velocity[i, :], spike_position[i, :], permutations, primitive_filter)
 
         _, spike_primitive[i, :] = primitive_neuron.forward(pos_vel_spikes)
 
-    primitive_list.append(spike_primitive.numpy()), joint_angles_list.append(joint_angles), position_list.append(spike_position.numpy()), velocity_list.append(spike_velocity.numpy())
+    primitive_list.append(spike_primitive.numpy()), joint_angles_list.append(joint_angles),
+    position_list.append(spike_position.numpy()), velocity_list.append(spike_velocity.numpy()),
+    sensory_list.append(spike_sensory.numpy())
 
-pickle_save(primitive_list, 'Data/primitive_list')
+
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
+pickle_save(sensory_list, 'Data/sensory_list')
 pickle_save(position_list, 'Data/position_list')
 pickle_save(velocity_list, 'Data/velocity_list')
+pickle_save(primitive_list, 'Data/primitive_list')
 
 '''
 Position neuron testing
@@ -89,13 +94,18 @@ fig2, ax3 = plt.subplots()
 ax4 = ax3.twinx()
 
 N_hairs, N_half = parameters.hair_field['N_hairs'], int(parameters.hair_field['N_hairs']/2)
+diff = hair_field.max_list[0] - hair_field.min_list[0]
 
 for i in range(N_half):
     spike_sensory[spike_sensory == 0] = np.nan
     ax3.scatter(time, (-i+N_half)*spike_sensory[:, i+N_half], color='dodgerblue', s=1)
     ax3.scatter(time, (1+i+N_half)*spike_sensory[:, i+N_half+N_hairs], color='red', s=1)
+
 ax4.plot(time, joint_angles[:, 0], color='black')
-ax4.plot(time, np.full(time.shape, np.max(joint_angles[:, 0])/2 + np.min(joint_angles[:, 0])/2), linestyle='dotted', color='red')
+ax4.plot(time, np.full(time.shape, diff/2 + hair_field.min_list[0]), linestyle='dotted', color='red')
+ax3.set_ylim(1-N_hairs*.05, N_hairs*1.05)
+ax4.set_ylim(hair_field.min_list[0]-.05*diff, hair_field.max_list[0]+.05*diff)
+
 plot_spike_timing(ax3, ax4, fig2, N_hairs)
 
 '''

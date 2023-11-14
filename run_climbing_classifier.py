@@ -7,7 +7,7 @@ data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
 parameters = Parameters(t_total=20, dt=0.001)
 
-N_simulations = 12
+N_simulations = 2
 sim = 0
 
 pitch = np.empty((parameters.general['N_steps'], N_simulations))
@@ -38,7 +38,7 @@ for j in range(360):
     ratio = bin[1]/bin[0]
 
     if ratio > 1.5:
-        weights[j] = 0.5E-3
+        weights[j] = 0.3E-3
 
 parameters.posture['w'] = weights.T
 posture_neuron = define_and_initialize(LIF_primitive, parameters.posture)

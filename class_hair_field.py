@@ -69,7 +69,7 @@ class HairField:
 
         return out
 
-    def reset_max_min(self, i=0):
+    def reset_max_min(self, i):
         self.max_joint_angle = self.max_list[i]
         self.min_joint_angle = self.min_list[i]
 

@@ -8,12 +8,12 @@ else:
     path = "/home/s3488926/Documents/master_project/drive/Kinematic_Data"
     print("Linux path used")
 
-t_total = 10
+t_total = 20
 N_frames = 200*t_total
 data = {}
 i = 0
 legs = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
-steps = '_00_'
+steps = '_48_'
 
 animals_list = os.listdir(path)
 for animal in animals_list:

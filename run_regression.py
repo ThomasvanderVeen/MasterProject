@@ -4,13 +4,14 @@ from sklearn.preprocessing import StandardScaler
 from functions import *
 import numpy as np
 from dictionaries import Parameters
+import matplotlib
 
 primitive_list = pickle_open('Data/primitive_list')
 data = pickle_open('Data/simulation_data')
 N_simulations = len(primitive_list)
-parameters = Parameters(t_total=20, dt=0.0003)
-tau = [50e-3, 100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3]
-tau = [750e-3]
+parameters = Parameters(t_total=6, dt=0.0001)
+tau = np.array([50e-3, 100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3])
+tau = np.array([750e-3])
 
 interneuron_list, test, train = [], [], []
 for t in tqdm(tau):
@@ -58,14 +59,29 @@ for t in tqdm(tau):
     y_predicted_train = model.predict(x_train)
     y_predicted_test = model.predict(x_test)
 
-plt.scatter(tau, train)
-plt.scatter(tau, test)
-plt.show()
+matplotlib.rc('xtick', labelsize=10)
+matplotlib.rc('ytick', labelsize=10)
 
-plt.plot(range(y_predicted_train.size), gaussian_filter(y_predicted_train))
-plt.plot(range(y_predicted_train.size), y_train)
-plt.show()
+fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 
-plt.plot(range(y_predicted_test.size), gaussian_filter(y_predicted_test))
-plt.plot(range(y_predicted_test.size), y_test)
-plt.show()
+ax.plot(tau*1000, train, color='blue')
+ax.plot(tau*1000, test, color='red')
+ax.scatter(tau*1000, train, color='blue')
+ax.scatter(tau*1000, test, color='red')
+ax.set_xlabel('tau (ms)', fontsize=15)
+ax.set_ylabel('accuracy', fontsize=15)
+ax.legend(['train', 'test'])
+
+fig.savefig('Images/regression_tau', bbox_inches='tight')
+
+fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
+
+plt.plot(range(y_predicted_test.size), gaussian_filter(y_predicted_test), color='blue')
+plt.plot(range(y_predicted_test.size), y_test, color='red')
+ax.set_xlabel('tau (ms)', fontsize=15)
+ax.set_ylabel('accuracy', fontsize=15)
+ax.legend(['prediction', 'ground truth'])
+
+fig.savefig('Images/regression_test', bbox_inches='tight')
+
+
