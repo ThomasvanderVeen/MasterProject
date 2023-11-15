@@ -11,7 +11,7 @@ parameters = Parameters(t_total=6, dt=0.0003)
 N_simulations = len(velocity_list)
 permutations = get_primitive_indexes(6)
 
-tau_list = np.linspace(1e-3, 30e-3, num=11)
+tau_list = np.linspace(1e-3, 15e-3, num=11)
 n_w = 7
 w_1 = np.linspace(1e-3, 19e-3, num=n_w)
 w_2 = np.linspace(1e-3, 19e-3, num=n_w)

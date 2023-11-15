@@ -7,7 +7,7 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 2
+N_simulations = 10
 w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
 w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
 _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
