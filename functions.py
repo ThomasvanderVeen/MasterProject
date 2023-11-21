@@ -226,3 +226,16 @@ def get_firing_rate_2(spike_train, dt, t=0.5, sigma=5):
     firing_rate[firing_rate < 2] = np.mean(firing_rate)
     firing_rate = gaussian_filter(firing_rate, sigma)
     return firing_rate
+
+
+def get_pitch(data, n_simulations, parameters):
+    pitch = np.empty((parameters.general['N_steps'], n_simulations))
+    for i in range(n_simulations):
+        pitch_single = np.array(data[f'simulation_{i}'][2][1, :])
+        pitch_single = pitch_single[:parameters.general['N_frames']]
+        pitch[:, i] = interpolate(pitch_single, parameters.general['t_total'], parameters.general['N_steps'])
+
+    pitch_max, pitch_min = np.max(pitch), np.min(pitch)
+    pitch_middle = pitch_max / 2 + pitch_min / 2
+
+    return pitch, pitch_max, pitch_min, pitch_middle

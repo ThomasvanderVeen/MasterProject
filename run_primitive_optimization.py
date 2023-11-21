@@ -7,7 +7,7 @@ velocity_list = pickle_open('Data/velocity_list')
 position_list = pickle_open('Data/position_list')
 ground_truth_list = pickle_open('Data/ground_truth')
 
-parameters = Parameters(t_total=6, dt=0.0003)
+parameters = Parameters(t_total=5, dt=0.0001)
 N_simulations = len(velocity_list)
 permutations = get_primitive_indexes(6)
 

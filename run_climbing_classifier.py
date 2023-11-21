@@ -1,48 +1,38 @@
 from functions import *
 from dictionaries import Parameters
 from class_primitive_neuron import LIF_primitive
-from scipy.signal import find_peaks
+from plots import *
 
-data = pickle_open('Data/simulation_data')
-primitive_list = pickle_open('Data/primitive_list')
 parameters = Parameters(t_total=20, dt=0.001)
 N_simulations = 8
 N_simulations_test = 2
 N_plot = 1
+n_bins = 50
+w_1_list = np.linspace(0.95E-3, 1.3E-3, num=30)
+w_2_list = np.linspace(0E-3, -1E-3, num=5)
 
-pitch = np.empty((parameters.general['N_steps'], N_simulations + N_simulations_test))
-for i in range(N_simulations + N_simulations_test):
-    pitch_single = np.array(data[f'simulation_{i}'][2][1, :])
-    pitch_single = pitch_single[:parameters.general['N_frames']]
-    pitch[:, i] = interpolate(pitch_single, parameters.general['t_total'], parameters.general['N_steps'])
-
-pitch_max, pitch_min = np.max(pitch), np.min(pitch)
-pitch_middle = pitch_max/2 + pitch_min/2
-
-N_bins = 2
-N_spikes = np.zeros(360)
-weights = np.zeros(360)
-
-w_1_list = np.linspace(0.9E-3, 1.4E-3, num=12)
-w_2_list = np.linspace(0E-3, -1E-3, num=3)
+data = pickle_open('Data/simulation_data')
+primitive_list = pickle_open('Data/primitive_list')
+pitch, pitch_max, pitch_min, pitch_middle = get_pitch(data, N_simulations+N_simulations_test, parameters)
 accuracy_list = np.zeros((w_2_list.size, w_1_list.size))
+time = np.linspace(0, parameters.general['t_total'], num=parameters.general['N_steps'])
+spike_posture_list, spike_posture_binned_list = [], []
 
 for l in tqdm(range(w_2_list.size)):
     for m in range(w_1_list.size):
         weights = np.zeros(360)
+
         for j in range(360):
-            bin, bin_2 = np.zeros(N_bins), np.zeros(60)
-            bin_pitch = np.zeros(N_bins)
+            incidence_binned = np.zeros(2)
+
             for i in range(N_simulations):
                 spike_primitive = primitive_list[i]
                 spike_train = spike_primitive[:, j]
                 incidence = spike_train*pitch[:, i]
                 incidence[incidence == 0] = np.nan
-                bin += np.histogram(incidence, bins=N_bins, range=(pitch_min, pitch_max))[0]
-                bin_2 += np.histogram(incidence, bins=60, range=(pitch_min, pitch_max))[0]
-                bin_pitch += np.histogram(pitch[:, i], bins=N_bins, range=(pitch_min, pitch_max))[0]
+                incidence_binned += np.histogram(incidence, bins=2, range=(pitch_min, pitch_max))[0]
 
-            ratio = bin[1]/bin[0]
+            ratio = incidence_binned[1]/incidence_binned[0]
 
             if ratio > 1.5:
                 weights[j] = w_1_list[m]
@@ -52,22 +42,18 @@ for l in tqdm(range(w_2_list.size)):
 
         parameters.posture['w'] = weights.T
         posture_neuron = define_and_initialize(LIF_primitive, parameters.posture)
-        spike_posture, time = np.empty((parameters.general['N_steps'], N_simulations_test)), np.zeros(parameters.general['N_steps'])
+        spike_posture = np.empty((parameters.general['N_steps'], N_simulations_test))
+        pitch_binary = np.zeros(pitch.shape)
 
         for j in range(N_simulations_test):
             spike_primitive = primitive_list[j+N_simulations]
             for i in range(parameters.general['N_steps']):
-                time[i] = i * parameters.general['dt']
                 _, spike_posture[i, j] = posture_neuron.forward(torch.from_numpy(spike_primitive[i, :]))
 
-        n_bins = 50
-
-        pitch_binary = np.zeros(pitch.shape)
         pitch_binary[pitch > pitch_middle] = 1
-
         pitch_binned = convert_to_bins(pitch_binary, n_bins)
-
         spike_posture_binned = convert_to_bins(spike_posture, n_bins)
+        spike_posture_binned_list.append(spike_posture_binned), spike_posture_list.append(spike_posture)
 
         intersection = pitch_binned[:, N_simulations:] + spike_posture_binned
         difference = pitch_binned[:, N_simulations:] - spike_posture_binned
@@ -83,21 +69,19 @@ for l in tqdm(range(w_2_list.size)):
 
         accuracy_list[l, m] = ACC
 
-print(accuracy_list)
+max_index = np.where(np.ndarray.flatten(accuracy_list) == np.max(accuracy_list))
+spike_posture, spike_posture_binned = spike_posture_list[max_index[0][0]], spike_posture_binned_list[max_index[0][0]]
 
-colors = ['#c1272d', '#0000a7', '#eecc16', '#008176', '#b3b3b3']
+fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 
 for i in range(w_2_list.size):
-    plt.plot(w_1_list*1000, accuracy_list[i, :], label=f'w_2 = {w_2_list[i]*1000}', color=colors[i])
+    ax.scatter(w_1_list * 1000, accuracy_list[i, :], color=parameters.general['colors'][i], s=13)
+    ax.plot(w_1_list*1000, accuracy_list[i, :], label=f'w_inh = {np.round(w_2_list[i]*1000, 2)}',
+            color=parameters.general['colors'][i])
 
-plt.xlabel('w_1 (mV)')
-plt.ylabel('Accuracy')
-plt.plot()
-plt.legend()
+plot_climbing_accuracy(fig, ax)
 
-print(f'TPR: {TPR}, FPR: {FPR}, ACC: {ACC}')
-
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 
 ax.plot(time, pitch[:, N_simulations+N_plot], color='black', label='body pitch')
 ax.plot([time[0], time[-1]], [pitch_middle, pitch_middle], linestyle='dotted', color='red')
@@ -110,15 +94,8 @@ ax.scatter(time, pitch[:, N_simulations+N_plot]*spike_posture[:, N_plot], color=
 for i in range(n_bins):
     if spike_posture_binned[i, N_plot] == 1:
         ax.fill_between([x[i]-x_dist/2, x[i]+x_dist/2], -1000, 1000, alpha=0.3, color='grey')
-ax.set_ylim([-20, 75])
-ax.set_xlim([0, 20])
-ax.legend(['body pitch', 'divide', 'spikes', 'climbing'])
-ax.set_xlabel("Time [s]")
-ax.set_ylabel("Body Pitch [°]")
 
-plt.show()
-
-#spike_primitive[spike_primitive == 0] = np.nan
+plot_climbing_classifier(fig, ax)
 
 
 

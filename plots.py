@@ -168,3 +168,22 @@ def plot_primitive_weights(ax, fig, tau_list, w_1, w_2):
     fig.savefig('Images/primitive_weights', bbox_inches='tight')
 
     return
+
+
+def plot_climbing_accuracy(fig, ax):
+    ax.set_xlabel('w_exc (mV)')
+    ax.set_ylabel('Accuracy')
+    ax.plot()
+    ax.legend()
+
+    fig.savefig('Images/climbing_accuracy', bbox_inches='tight')
+
+
+def plot_climbing_classifier(fig, ax):
+    ax.set_ylim([-20, 75])
+    ax.set_xlim([0, 20])
+    ax.legend(['body pitch', 'divide', 'spikes', 'climbing'])
+    ax.set_xlabel("Time [s]")
+    ax.set_ylabel("Body Pitch [°]")
+
+    fig.savefig('Images/climbing_classifier', bbox_inches='tight')

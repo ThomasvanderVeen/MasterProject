@@ -20,7 +20,7 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     joint_angles = np.array(data[f'simulation_{k}'][0]).T
 
     parameters = Parameters(max_joint_angle=np.amax(joint_angles, axis=0), min_joint_angle=np.amin(joint_angles, axis=0),
-                            n_hairs=20, t_total=20, dt=0.001, n_angles=18)
+                            n_hairs=20, t_total=5, dt=0.0001, n_angles=18)
     parameters.primitive['w'] = weights_primitive
 
     N_frames = parameters.general['N_frames']
@@ -66,11 +66,15 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     position_list.append(spike_position.numpy()), velocity_list.append(spike_velocity.numpy()),
     sensory_list.append(spike_sensory.numpy())
 
-
+print('0')
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
+print('1')
 pickle_save(sensory_list, 'Data/sensory_list')
+print('2')
 pickle_save(position_list, 'Data/position_list')
+print('3')
 pickle_save(velocity_list, 'Data/velocity_list')
+print('4')
 pickle_save(primitive_list, 'Data/primitive_list')
 
 '''
