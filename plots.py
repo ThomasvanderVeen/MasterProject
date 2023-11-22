@@ -144,7 +144,7 @@ def plot_psth(ax, fig, neuron, leg):
 
 def plot_primitive_accuracy(ax, fig, tau_list):
     ax.set_xlabel('τ [ms]', fontsize=15)
-    ax.set_ylabel("Accuracy", fontsize=15)
+    ax.set_ylabel("Matthews correlation", fontsize=15)
     ax.set_xticks(1000*tau_list[::2])
     ax.legend(['v-p', 'v-v', 'p-p', 'p-v-v', 'v-p-p', 'mean'], loc='lower right')
     fig.tight_layout(pad=0.5)

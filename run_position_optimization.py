@@ -15,13 +15,13 @@ noises = [0.01, 0.05, 0.10]
 n = 100
 skip = 1
 n_angles = 18
-n_simulations = 3
+n_simulations = 1
 
-parameters = Parameters(t_total=5, dt=0.0001, n_hairs=20)
+parameters = Parameters(t_total=5, dt=0.001, n_hairs=20)
 x = np.linspace(0, parameters.general['t_total'], num=parameters.general['N_steps'])
 d, d_noise = np.zeros((n_angles, n_simulations, n_grid, n_grid)), np.zeros((n_angles, n_simulations, 3))
-b_list = np.linspace(2e-3, 10e-3, num=n_grid)
-tau_w_list = np.linspace(10e-3, 40e-3, num=n_grid)
+b_list = np.linspace(2e-3, 25e-3, num=n_grid)
+tau_w_list = np.linspace(10e-3, 60e-3, num=n_grid)
 euclidean_norm = lambda x, y: np.abs(x - y)
 
 for j in tqdm(range(n_simulations)):
@@ -74,6 +74,11 @@ for j in tqdm(range(n_simulations)):
 
                 d[i, j, l, m], cost_matrix, acc_cost_matrix, path = dtw(combined_firing_rate[::n], joint_angle[::n], dist=euclidean_norm)
 
+                #print(f'b: {b_list[l]}, tau: {tau_w_list[m]}, d: {d[i, j, l, m]}')
+                #plt.plot(x_plot, combined_firing_rate)
+                #plt.plot(x_plot, joint_angle)
+                #plt.show()
+
     for i in range(n_angles):
         for k in range(len(noises)):
             joint_angle = zscore.zscore(joint_angles[:, i])
@@ -115,7 +120,7 @@ i = 0
 for m in range(b_list.size):
     for l in range(tau_w_list.size):
         ax.errorbar(d_average[l, m], i+3, xerr=d_std[l, m], fmt='o', color='black', capsize=3)
-        yticks.append(f'tau={tau_w_list[m]*1000}ms, b={b_list[l]*1000}mV')
+        yticks.append(f'tau={np.around(tau_w_list[m]*1000, 3)}ms, b={np.around(b_list[l]*1000, 3)}mV')
         i += 1
 ax.set_yticks(range(i+3))
 ax.set_yticklabels(yticks)
