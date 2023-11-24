@@ -10,31 +10,30 @@ position_list = pickle_open('Data/position_list')
 sensory_list = pickle_open('Data/sensory_list')
 joint_angles_list = pickle_open('Data/joint_angles_list')
 
-n_grid = 3
+n_grid = 4
 noises = [0.01, 0.05, 0.10]
 n = 100
-skip = 1
-n_angles = 18
-n_simulations = 1
+skip = 10
 
-parameters = Parameters(t_total=5, dt=0.001, n_hairs=20)
+parameters = Parameters(t_total=5, dt=0.0001, n_hairs=20)
 x = np.linspace(0, parameters.general['t_total'], num=parameters.general['N_steps'])
-d, d_noise = np.zeros((n_angles, n_simulations, n_grid, n_grid)), np.zeros((n_angles, n_simulations, 3))
-b_list = np.linspace(2e-3, 25e-3, num=n_grid)
-tau_w_list = np.linspace(10e-3, 60e-3, num=n_grid)
+d, d_noise = np.empty((18, len(position_list), n_grid, n_grid)), np.empty((18, len(position_list), 3))
+b_list = np.linspace(10e-3, 40e-3, num=n_grid)
+tau_w_list = np.linspace(10e-3, 25e-3, num=n_grid)
 euclidean_norm = lambda x, y: np.abs(x - y)
 
-for j in tqdm(range(n_simulations)):
+for j in tqdm(range(len(position_list))):
     joint_angles = joint_angles_list[j]
     spike_sensory = sensory_list[j]
+    spike_position = np.zeros((parameters.general['N_steps'], 36))
     position_neuron = define_and_initialize(LIF, parameters.position)
 
     for l in range(b_list.size):
         for m in range(tau_w_list.size):
+
             parameters.position['b'] = b_list[l]
             parameters.position['tau_W'] = tau_w_list[m]
             position_neuron = define_and_initialize(LIF, parameters.position)
-            spike_position = np.zeros((parameters.general['N_steps'], 36))
 
             for i in range(parameters.general['N_steps']):
                 reshaped_spikes = torch.reshape(torch.from_numpy(spike_sensory[i, :]),
@@ -43,26 +42,16 @@ for j in tqdm(range(n_simulations)):
                 _, spike_position[i, :] = position_neuron.forward(
                     reshaped_spikes[:, int(reshaped_spikes.shape[1]/2)-1:])
 
-            for i in range(n_angles):
+            for i in range(18):
                 firing_rate_1, spikes_index_1 = get_firing_rate(spike_position[:, 2*i], parameters.general['dt'])
                 firing_rate_2, spikes_index_2 = get_firing_rate(spike_position[:, 2*i+1], parameters.general['dt'])
+
+                func1 = interpolate.interp1d(x[spikes_index_1], firing_rate_1)
+                func2 = interpolate.interp1d(x[spikes_index_2], firing_rate_2)
+
                 combined_firing_rate = np.zeros(x.shape)
-
-                try:
-                    func1 = interpolate.interp1d(x[spikes_index_1], firing_rate_1)
-                    combined_firing_rate[spikes_index_1[0]:spikes_index_1[-1]] -= func1(
-                        x[spikes_index_1[0]:spikes_index_1[-1]])
-                except:
-                    spikes_index_1 = spikes_index_2
-                    print(f'Skipped func1, no spikes')
-
-                try:
-                    func2 = interpolate.interp1d(x[spikes_index_2], firing_rate_2)
-                    combined_firing_rate[spikes_index_2[0]:spikes_index_2[-1]] += func2(
-                        x[spikes_index_2[0]:spikes_index_2[-1]])
-                except:
-                    spikes_index_2 = spikes_index_1
-                    print(f'Skipped func2, no spikes')
+                combined_firing_rate[spikes_index_1[0]:spikes_index_1[-1]] -= func1(x[spikes_index_1[0]:spikes_index_1[-1]])
+                combined_firing_rate[spikes_index_2[0]:spikes_index_2[-1]] += func2(x[spikes_index_2[0]:spikes_index_2[-1]])
 
                 minimum = np.min([spikes_index_1[0], spikes_index_2[0]])
                 maximum = np.max([spikes_index_1[-1], spikes_index_2[-1]])
@@ -74,32 +63,19 @@ for j in tqdm(range(n_simulations)):
 
                 d[i, j, l, m], cost_matrix, acc_cost_matrix, path = dtw(combined_firing_rate[::n], joint_angle[::n], dist=euclidean_norm)
 
-                #print(f'b: {b_list[l]}, tau: {tau_w_list[m]}, d: {d[i, j, l, m]}')
-                #plt.plot(x_plot, combined_firing_rate)
-                #plt.plot(x_plot, joint_angle)
-                #plt.show()
-
-    for i in range(n_angles):
+    for i in range(18):
         for k in range(len(noises)):
+
             joint_angle = zscore.zscore(joint_angles[:, i])
             joint_angle_noise = joint_angle[::n]+np.random.normal(0, np.std(joint_angle[::n])*noises[k], joint_angle[::n].size)
             d_noise[i, j, k], _, _, _ = dtw(joint_angle[::n], joint_angle_noise, dist=euclidean_norm)
 
+
 d_average, d_average_noise = np.mean(d, axis=0), np.mean(d_noise, axis=0)
 d_average, d_average_noise = np.mean(d_average, axis=0), np.mean(d_average_noise, axis=0)
 
-d_std, d_std_noise = np.zeros([n_grid, n_grid]), np.zeros([3])
-for i in range(d.shape[2]):
-    for j in range(d.shape[3]):
-        d_std[i, j] = np.std(d[:, :, i, j])
-for i in range(3):
-    d_std_noise[i] = np.std(d_noise[:, :, i])
-
-d_max, d_max_noise = np.max(d, axis=0), np.max(d_noise, axis=0)
-d_max, d_max_noise = np.max(d_max, axis=0), np.max(d_max_noise, axis=0)
-
-d_min, d_min_noise = np.min(d, axis=0), np.min(d_noise, axis=0)
-d_min, d_min_noise = np.min(d_min, axis=0), np.min(d_min_noise, axis=0)
+d_std, d_std_noise = np.std(d, axis=0), np.std(d_noise, axis=0)
+d_std, d_std_noise = np.std(d_std, axis=0), np.std(d_std_noise, axis=0)
 
 pickle_save([d_average, d_std, d_average_noise, d_std_noise], 'Data/temp_d')
 
@@ -129,13 +105,13 @@ fig.tight_layout(pad=0.5)
 
 fig.savefig('Images/DTW_plot', bbox_inches='tight')
 
-fig2, ax2 = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 
+
+'''
 for i in np.arange(len(path[0]))[::skip]:
-    ax2.plot([x_plot[::n][path[0][i]], x_plot[::n][path[1][i]]], [combined_firing_rate[::n][path[0][i]], joint_angle[::n][path[1][i]]], color='grey', alpha=0.7)
+    plt.plot([x_plot[::n][path[0][i]], x_plot[::n][path[1][i]]], [combined_firing_rate[::n][path[0][i]], joint_angle[::n][path[1][i]]], color='grey', alpha=0.7)
 
-ax2.plot(x_plot, combined_firing_rate, color='red')
-ax2.plot(x_plot, joint_angle[minimum:maximum], color='blue')
-ax2.set_xlabel('time (s)', fontsize=15)
-ax2.set_ylabel('joint angle (degrees)', fontsize=15)
-fig2.savefig('Images/DTW_path', bbox_inches='tight')
+plt.plot(x_plot, combined_firing_rate, color='red')
+plt.plot(x_plot, joint_angle, color='blue')
+plt.show()
+'''

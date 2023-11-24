@@ -126,25 +126,17 @@ def gaussian_filter(x, sigma=5):
     y = input_min + (((x-min(x))*(input_max-input_min))/(max(x)-min(x)))
     return y
 
-
 def convert_to_bins(old_array, n_bins, sum_bool=False):
-    n_steps = old_array.shape[0]
-    n_steps_bin = int(n_steps / n_bins)
-    new_array = np.empty((n_bins, old_array.shape[1]), dtype=int)
+    old_array = old_array.T
+    while old_array.shape[1] != n_bins:
+        try:
+            old_array = np.sum(old_array.reshape(old_array.shape[0], n_bins, int(old_array.shape[1] / n_bins)), axis=2)
+        except:
+            old_array = np.vstack((old_array.T, old_array[:, -1].T)).T
+    if not sum_bool:
+        old_array[old_array > 0] = 1
 
-    for j in range(new_array.shape[1]):
-        for i in range(n_bins):
-            elements = old_array[n_steps_bin*i:n_steps_bin*(i+1), j]
-            elements[elements == 0] = False
-            if np.any(elements):
-                if sum_bool:
-                    new_array[i, j] = np.sum(elements)/n_steps
-                else:
-                    new_array[i, j] = 1
-            else:
-                new_array[i, j] = 0
-
-    return new_array
+    return old_array.T
 
 
 def get_stance_swing_bins(gait, spike_train):

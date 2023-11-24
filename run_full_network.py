@@ -7,10 +7,10 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 2
+N_simulations = 1
 w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
+#w_pos = [200e-3, 0, 200e-3, 200e-3, 200-3]
 w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
-w_pos = [500, 500, 500, 500, 500]
 _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
 permutations = get_primitive_indexes(6)
 data = pickle_open('Data/simulation_data')
@@ -31,11 +31,9 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     joint_angles = joint_angles[:parameters.general['N_frames']]
     joint_angles = interpolate(joint_angles, parameters.general['t_total'], parameters.general['N_steps'])
 
-
     hair_angles = np.zeros((joint_angles.shape[0], 2*joint_angles.shape[1]*parameters.hair_field['N_hairs']))
 
     for i in range(18):
-        joint_angles[:, i] = gaussian_filter(joint_angles[:, i], 5)
         hair_field = HairField(parameters.hair_field)
         hair_field.reset_max_min(i)
         hair_field.get_double_receptive_field()
@@ -69,15 +67,11 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     position_list.append(spike_position.numpy()), velocity_list.append(spike_velocity.numpy()),
     sensory_list.append(spike_sensory.numpy())
 
-print('0')
+
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
-print('1')
 pickle_save(sensory_list, 'Data/sensory_list')
-print('2')
 pickle_save(position_list, 'Data/position_list')
-print('3')
 pickle_save(velocity_list, 'Data/velocity_list')
-print('4')
 pickle_save(primitive_list, 'Data/primitive_list')
 
 '''
@@ -183,9 +177,6 @@ for k in tqdm(range(N_simulations), desc='ROC plot progress'):
         ground_truth[j, ground_truth_2 > 2.9] = 1
         ground_truth[j, ground_truth_2 < 2.9] = 0
 
-    print(ground_truth[ground_truth < 0.5].size)
-    print(ground_truth[ground_truth > 0.5].size)
-
     ground_truth_list.append(ground_truth)
 
     ground_truth_bins = convert_to_bins(ground_truth, 1000)
@@ -216,8 +207,9 @@ for i in range(360):
     plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
                 true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
     ACC = (true_pos_sum[i] + true_neg_sum[i])/(true_pos_sum[i] + true_neg_sum[i] + false_pos_sum[i] + false_neg_sum[i] + 0.0000001)
-    accuracy = np.append(accuracy, ACC)
-    accuracy_types[synapse_type[i]] += ACC/N_types[synapse_type[i]]
+    F1 = 2 * true_pos_sum[i] / (2 * true_pos_sum[i] + false_pos_sum[i] + false_neg_sum[i] + 0.0000001)
+    accuracy = np.append(accuracy, F1)
+    accuracy_types[synapse_type[i]] += F1/N_types[synapse_type[i]]
 
 accuracy_mean = np.mean(accuracy)
 

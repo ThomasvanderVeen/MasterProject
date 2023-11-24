@@ -8,7 +8,7 @@ else:
     path = "/home/s3488926/Documents/master_project/drive/Kinematic_Data"
     print("Linux path used")
 
-t_total = 6
+t_total = 5
 N_frames = 200*t_total
 data = {}
 i = 0

@@ -2,21 +2,22 @@ from functions import *
 from class_primitive_neuron import LIF_primitive
 from dictionaries import Parameters
 from plots import *
+import time
 
+joint_angles_list = pickle_open('Data/joint_angles_list')
 velocity_list = pickle_open('Data/velocity_list')
 position_list = pickle_open('Data/position_list')
 ground_truth_list = pickle_open('Data/ground_truth')
 
-
 parameters = Parameters(t_total=5, dt=0.001)
 N_simulations = len(velocity_list)
-N_simulations = 2
+N_simulations = 1
 permutations = get_primitive_indexes(6)
 
-tau_list = np.linspace(0e-3, 7.5e-3, num=4)
-n_w = 5
-w_1 = np.linspace(0e-3, 15e-3, num=n_w)
-w_2 = np.linspace(0e-3, 15e-3, num=n_w)
+tau_list = np.linspace(4e-3, 25e-3, num=4)
+n_w = 10
+w_1 = np.linspace(0e-3, 20e-3, num=n_w)
+w_2 = np.linspace(0e-3, 20e-3, num=n_w)
 w_1_opt, w_2_opt, accuracy_opt = \
     np.zeros([tau_list.size, 5]), np.zeros([tau_list.size, 5]), np.zeros([tau_list.size, 5])
 accuracy_matrix = np.zeros((n_w, n_w, 5))
@@ -24,6 +25,7 @@ accuracy_matrix = np.zeros((n_w, n_w, 5))
 for p in tqdm(range(tau_list.size)):
     for l in range(n_w):
         for m in range(n_w):
+
             w_pos = [w_1[l]]*5
             w_vel = [w_2[m]]*5
             _, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
@@ -43,11 +45,12 @@ for p in tqdm(range(tau_list.size)):
                                                               primitive_filter)
 
                     _, spike_primitive[j, :] = primitive_neuron.forward(pos_vel_spikes)
-                ground_truth_bins = convert_to_bins(ground_truth, 100)
-                spike_primitive_bins = convert_to_bins(spike_primitive, 100)
 
+                ground_truth_bins = convert_to_bins(ground_truth, 200)
+                spike_primitive_bins = convert_to_bins(spike_primitive, 200)
+
+                t1 = time.time()
                 for j in range(360):
-
 
                     intersect = spike_primitive_bins[:, j] + ground_truth_bins[:, j]
                     difference = spike_primitive_bins[:, j] - ground_truth_bins[:, j]
@@ -67,7 +70,6 @@ for p in tqdm(range(tau_list.size)):
                     plt.show()
                     '''
 
-
             true_pos_sum = np.sum(true_positive, axis=0)
             false_pos_sum = np.sum(false_positive, axis=0)
             true_neg_sum = np.sum(true_negative, axis=0)
@@ -85,14 +87,21 @@ for p in tqdm(range(tau_list.size)):
                 FDR = 1 - PPV
                 FOR = 1 - NPV
 
+                ACC_balanced = (TPR + TNR)/2
+                F1 = 2*true_pos_sum[i]/(2*true_pos_sum[i]+false_pos_sum[i]+false_neg_sum[i] + 0.0000001)
                 MCC = np.sqrt(TPR*TNR*PPV*NPV) - np.sqrt(FNR*FPR*FOR*FDR)
+                x = np.linspace(0, 1, num=ground_truth_bins[:, i].shape[0])
 
-                accuracy_types[synapse_type[i]] += MCC / N_types[synapse_type[i]]
+                #print(synapse_type[i], ACC_balanced)
+                #plt.scatter(x, ground_truth_bins[:, i])
+                #plt.scatter(x, spike_primitive_bins[:, i] * 2)
+                #plt.show()
+
+                accuracy_types[synapse_type[i]] += ACC_balanced / N_types[synapse_type[i]]
 
                 #ACC = (true_pos_sum[i] + true_neg_sum[i])/(true_pos_sum[i] + true_neg_sum[i] + false_pos_sum[i] +
-                #                                           false_neg_sum[i] + 0.0000001)
+                #                                          false_neg_sum[i] + 0.0000001)
                 #accuracy_types[synapse_type[i]] += ACC/N_types[synapse_type[i]]
-
             accuracy_matrix[l, m, :] = accuracy_types
 
     for i in range(5):
