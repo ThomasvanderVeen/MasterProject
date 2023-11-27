@@ -14,8 +14,8 @@ N_simulations = len(velocity_list)
 N_simulations = 1
 permutations = get_primitive_indexes(6)
 
-tau_list = np.linspace(4e-3, 25e-3, num=4)
-n_w = 10
+tau_list = np.linspace(0e-3, 8e-3, num=5)
+n_w = 8
 w_1 = np.linspace(0e-3, 20e-3, num=n_w)
 w_2 = np.linspace(0e-3, 20e-3, num=n_w)
 w_1_opt, w_2_opt, accuracy_opt = \

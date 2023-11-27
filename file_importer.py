@@ -1,9 +1,14 @@
 import scipy.io
 from functions import *
 
+desktop = False
 if os.name == 'nt':
-    path = "C:\DOCUMENTEN\RUG\Master\Master Research Project\Kinematic_Data"
-    print("Windows path used")
+    if desktop:
+        path = "C:\DOCUMENTEN\RUG\Master\Master Research Project\Kinematic_Data"
+        print("Windows desktop path used")
+    else:
+        path = r"C:\Users\thoma\Documents\RUG\Master Project\Kinematic_Data"
+        print("Windows laptop path used")
 else:
     path = "/home/s3488926/Documents/master_project/drive/Kinematic_Data"
     print("Linux path used")

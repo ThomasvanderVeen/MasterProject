@@ -7,7 +7,7 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 1
+N_simulations = 10
 w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
 #w_pos = [200e-3, 0, 200e-3, 200e-3, 200-3]
 w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
@@ -21,7 +21,7 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     joint_angles = np.array(data[f'simulation_{k}'][0]).T
 
     parameters = Parameters(max_joint_angle=np.amax(joint_angles, axis=0), min_joint_angle=np.amin(joint_angles, axis=0),
-                            n_hairs=20, t_total=5, dt=0.001, n_angles=18)
+                            n_hairs=100, t_total=5, dt=0.001, n_angles=18)
     parameters.primitive['w'] = weights_primitive
 
     N_frames = parameters.general['N_frames']

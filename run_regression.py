@@ -9,9 +9,9 @@ import matplotlib
 primitive_list = pickle_open('Data/primitive_list')
 data = pickle_open('Data/simulation_data')
 N_simulations = len(primitive_list)
-parameters = Parameters(t_total=6, dt=0.0001)
-tau = np.array([50e-3, 100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3])
-tau = np.array([750e-3])
+parameters = Parameters(t_total=5, dt=0.0001)
+tau = np.array([100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3, 3000e-3])
+#tau = np.array([2000e-3])
 
 interneuron_list, test, train = [], [], []
 for t in tqdm(tau):
@@ -37,7 +37,7 @@ for t in tqdm(tau):
     model = SGD(alpha=0.000, max_iter=10000, verbose=100)
 
     x_train, x_test, y_train, y_test = train_test_split(primitive_list, pitch_list, test_size=0.1, random_state=42)
-
+    print(x_train, y_train)
     scaler = StandardScaler()
     scaler.fit(np.vstack(primitive_list))
 
@@ -76,10 +76,10 @@ fig.savefig('Images/regression_tau', bbox_inches='tight')
 
 fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 
-plt.plot(range(y_predicted_test.size), gaussian_filter(y_predicted_test), color='blue')
+plt.plot(range(y_predicted_test.size), y_predicted_test, color='blue')
 plt.plot(range(y_predicted_test.size), y_test, color='red')
 ax.set_xlabel('tau (ms)', fontsize=15)
-ax.set_ylabel('accuracy', fontsize=15)
+ax.set_ylabel('Body Pitch', fontsize=15)
 ax.legend(['prediction', 'ground truth'])
 
 fig.savefig('Images/regression_test', bbox_inches='tight')
