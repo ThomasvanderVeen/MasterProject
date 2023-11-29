@@ -11,11 +11,11 @@ ground_truth_list = pickle_open('Data/ground_truth')
 
 parameters = Parameters(t_total=5, dt=0.001)
 N_simulations = len(velocity_list)
-N_simulations = 1
+N_simulations = 10
 permutations = get_primitive_indexes(6)
 
-tau_list = np.linspace(0e-3, 8e-3, num=5)
-n_w = 8
+tau_list = np.linspace(0e-3, 10e-3, num=5)
+n_w = 7
 w_1 = np.linspace(0e-3, 20e-3, num=n_w)
 w_2 = np.linspace(0e-3, 20e-3, num=n_w)
 w_1_opt, w_2_opt, accuracy_opt = \
@@ -59,16 +59,6 @@ for p in tqdm(range(tau_list.size)):
                     false_positive[i, j] = difference[difference > 0.5].size
                     true_negative[i, j] = intersect[intersect < 0.5].size
                     false_negative[i, j] = difference[difference < -0.5].size
-
-                    '''
-                    print(true_positive[i, j], true_negative[i, j], false_positive[i, j], false_negative[i, j])
-                    print((true_positive[i, j] + true_negative[i, j])/(true_positive[i, j] + true_negative[i, j] + false_positive[i, j] + false_negative[i, j]))
-                    print(synapse_type[j])
-                    x = range(ground_truth_bins[:, j].size)
-                    plt.scatter(x, ground_truth_bins[:, j])
-                    plt.scatter(x, spike_primitive_bins[:, j]*2)
-                    plt.show()
-                    '''
 
             true_pos_sum = np.sum(true_positive, axis=0)
             false_pos_sum = np.sum(false_positive, axis=0)

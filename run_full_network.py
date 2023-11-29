@@ -7,11 +7,11 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 10
+N_simulations = 1
 w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
 #w_pos = [200e-3, 0, 200e-3, 200e-3, 200-3]
 w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
-_, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
+permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
 permutations = get_primitive_indexes(6)
 data = pickle_open('Data/simulation_data')
 
@@ -112,17 +112,31 @@ plot_spike_timing(ax3, ax4, fig2, N_hairs)
 '''
 Velocity neuron testing
 '''
-
 spike_velocity = spike_velocity.numpy()
-spike_velocity[spike_velocity == 0] = np.nan
+'''
+fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
+ax1 = ax.twinx()
 
-fig, ax = plt.subplots()
+firing_rate_down = get_firing_rate_2(spike_velocity[:, 0], parameters.general['dt'], t=0.05)
+firing_rate_up = get_firing_rate_2(spike_velocity[:, 1], parameters.general['dt'], t=0.05)
+
+ax.plot(time, firing_rate_down, color=parameters.general['colors'][0])
+ax.plot(time, firing_rate_up, color=parameters.general['colors'][1])
+ax1.plot(time[1:], np.diff(joint_angles[:, 0]), color='black')
+ax1.plot(time, np.full(time.size, 0))
+
+fig.savefig('Images/movement_binary')
+
+spike_velocity[spike_velocity == 0] = np.nan
+'''
+fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 
 plt.plot(time, joint_angles[:, 0], color='black')
-plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 0], color='blue')
-plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 1], color='red')
+plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 0], color='blue', s=10)
+plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 1], color='red', s=10)
 
 plot_movement_interneuron_network(ax, fig)
+
 
 TP, FP, TN, FN = [], [], [], []
 for i in range(len(joint_angles_list)):
@@ -179,8 +193,8 @@ for k in tqdm(range(N_simulations), desc='ROC plot progress'):
 
     ground_truth_list.append(ground_truth)
 
-    ground_truth_bins = convert_to_bins(ground_truth, 1000)
-    spike_primitive_bins = convert_to_bins(spike_primitive, 1000)
+    ground_truth_bins = convert_to_bins(ground_truth, 200)
+    spike_primitive_bins = convert_to_bins(spike_primitive, 200)
 
     for i in range(360):
         intersect = spike_primitive_bins[:, i] + ground_truth_bins[:, i]
@@ -204,12 +218,13 @@ fig, ax = plt.subplots()
 colors = ['blue', 'black', 'green', 'yellow', 'orange']
 
 for i in range(360):
+    TPR = true_pos_sum[i] / (true_pos_sum[i] + false_neg_sum[i] + 0.0000001)
+    TNR = true_neg_sum[i] / (true_neg_sum[i] + false_pos_sum[i] + 0.0000001)
     plt.scatter(false_pos_sum[i]/(false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
                 true_pos_sum[i]/(true_pos_sum[i] + false_neg_sum[i] + 0.0000001), color=colors[synapse_type[i]])
-    ACC = (true_pos_sum[i] + true_neg_sum[i])/(true_pos_sum[i] + true_neg_sum[i] + false_pos_sum[i] + false_neg_sum[i] + 0.0000001)
-    F1 = 2 * true_pos_sum[i] / (2 * true_pos_sum[i] + false_pos_sum[i] + false_neg_sum[i] + 0.0000001)
-    accuracy = np.append(accuracy, F1)
-    accuracy_types[synapse_type[i]] += F1/N_types[synapse_type[i]]
+    ACC_balanced = (TPR + TNR) / 2
+    accuracy = np.append(accuracy, ACC_balanced)
+    accuracy_types[synapse_type[i]] += ACC_balanced/N_types[synapse_type[i]]
 
 accuracy_mean = np.mean(accuracy)
 
@@ -224,9 +239,11 @@ plot_primitive_ROC(ax, fig)
 Primitive neuron testing (PSTH plot)
 '''
 
+stance, swing = np.empty((6, 60)), np.empty((6, 60))
+
 for m in tqdm(range(6), desc='PSTH plot progress'):
     swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood = [np.empty((N_simulations, 60, i)) for
-                                                                                    i in [10, 20, 10, 20]]
+                                                                                    i in [15, 15, 15, 15]]
     for k in range(N_simulations):
         spike_primitive = primitive_list[k]
         gait = np.array(data[f'simulation_{k}'][1])[m, :]
@@ -237,11 +254,52 @@ for m in tqdm(range(6), desc='PSTH plot progress'):
                 get_stance_swing_bins(gait, spike_primitive[:, i + 60*m])
 
     swing_bin_likelihood, stance_bin_likelihood = np.mean(swing_bin_likelihood, axis=0), np.mean(stance_bin_likelihood, axis=0)
+    swing_sum, stance_sum = np.mean(swing_bin_likelihood, axis=1), np.mean(stance_bin_likelihood, axis=1)
+
+    swing[m, :] = swing_sum / (stance_sum + swing_sum)
+    stance[m, :] = stance_sum / (stance_sum + swing_sum)
 
     fig, ax = plt.subplots()
 
     for i in range(60):
-        ax.scatter(np.linspace(0, .475, num=10), swing_bin_likelihood[i, :], color='red', marker='^')
-        ax.scatter(np.linspace(.525, 1.5, num=20), stance_bin_likelihood[i, :], color='blue', marker='^')
+        ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood[i, :], color='red', marker='^')
+        ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood[i, :], color='blue', marker='^')
 
         plot_psth(ax, fig, i, m)
+
+x = [30, 90, 150, 210, 270, 330]
+legs = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
+swing = np.ndarray.flatten(swing)
+plt.close('all')
+
+fig, ax = plt.subplots()
+
+for i in range(360):
+    ax.scatter(i, swing[i], color=colors[synapse_type[i]], s=8)
+    if i % 60 == 0:
+        ax.plot([i, i], [0, 1], color='black', linestyle='dotted')
+ax.plot([360, 360], [0, 1], color='black', linestyle='dotted')
+ax.plot([0, 360], [0.95, 0.95], color='red', linestyle='dotted')
+ax.plot([0, 360], [0.1, 0.1], color='red', linestyle='dotted')
+ax.set_xticks(x)
+labels = [item.get_text() for item in ax.get_xticklabels()]
+labels[:] = legs
+ax.set_xticklabels(labels)
+ax.set_ylabel("n_sw/(n_sw+n_st)")
+plt.show()
+
+indexes_swing = np.where(swing > 0.95)
+indexes_stance = np.where(swing < 0.1)
+
+indexes_swing, leg_swing = get_indexes_legs(indexes_swing)
+indexes_stance, leg_stance = get_indexes_legs(indexes_stance)
+
+
+print('swing')
+for i in range(len(leg_swing)):
+    print(indexes_swing[i], leg_swing[i], legs[leg_swing[i]], permutations_name[indexes_swing[i]])
+
+print('stance')
+for i in range(len(leg_stance)):
+    print(indexes_stance[i], leg_stance[i], legs[leg_stance[i]], permutations_name[indexes_stance[i]])
+

@@ -15,14 +15,12 @@ class HairField:
         self.receptive_field = None
 
     def get_receptive_field(self):
-        rf = (self.max_joint_angle - self.min_joint_angle + (self.N_hairs + 2)*self.overlap) / self.N_hairs
+        rf = (self.max_joint_angle - self.min_joint_angle + (self.N_hairs + 2) * self.overlap) / self.N_hairs
 
         receptive_min = np.linspace(self.min_joint_angle + rf - 2 * self.overlap, self.max_joint_angle - 2 * rf + 2 *
-                                    self.overlap,
-                                    num=self.N_hairs - 2)
+                                    self.overlap, num=self.N_hairs - 2)
         receptive_max = np.linspace(self.min_joint_angle + 2 * rf - 2 * self.overlap, self.max_joint_angle - rf + 2 *
-                                    self.overlap,
-                                    num=self.N_hairs - 2)
+                                    self.overlap, num=self.N_hairs - 2)
 
         receptive_min = np.append(self.min_joint_angle, receptive_min)
         receptive_min = np.append(receptive_min, self.max_joint_angle - rf)
@@ -30,23 +28,6 @@ class HairField:
         receptive_max = np.append(self.min_joint_angle + rf, receptive_max)
 
         self.receptive_field = np.stack((receptive_min, receptive_max))
-
-    def get_binary_receptive_field(self):
-        half = self.min_joint_angle / 2 + self.max_joint_angle / 2
-
-        self.min_joint_angle = self.min_joint_angle
-        self.max_joint_angle = half + self.overlap_bi
-
-        self.get_receptive_field()
-        rf1 = np.flip(np.flip(self.receptive_field), 1)
-
-        self.max_joint_angle = 2 * half - self.min_joint_angle
-        self.min_joint_angle = half - self.overlap_bi
-
-        self.get_receptive_field()
-
-        self.receptive_field = np.hstack((rf1, self.receptive_field))
-        self.N_hairs = 2*self.N_hairs
 
     def get_double_receptive_field(self):
         self.get_receptive_field()

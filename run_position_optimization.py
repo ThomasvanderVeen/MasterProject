@@ -15,7 +15,7 @@ noises = [0.01, 0.05, 0.10]
 n = 100
 skip = 10
 
-parameters = Parameters(t_total=5, dt=0.0001, n_hairs=20)
+parameters = Parameters(t_total=5, dt=0.0001, n_hairs=100)
 x = np.linspace(0, parameters.general['t_total'], num=parameters.general['N_steps'])
 d, d_noise = np.empty((18, len(position_list), n_grid, n_grid)), np.empty((18, len(position_list), 3))
 b_list = np.linspace(10e-3, 40e-3, num=n_grid)

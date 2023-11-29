@@ -4,12 +4,12 @@ from class_primitive_neuron import LIF_primitive
 from plots import *
 
 parameters = Parameters(t_total=20, dt=0.001)
-N_simulations = 8
+N_simulations = 2
 N_simulations_test = 2
 N_plot = 1
 n_bins = 50
-w_1_list = np.linspace(0.95E-3, 1.3E-3, num=30)
-w_2_list = np.linspace(0E-3, -1E-3, num=5)
+w_1_list = np.linspace(0.75E-3, 1.75E-3, num=30)
+w_2_list = np.linspace(0E-3, -1.25E-3, num=5)
 
 data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
@@ -34,11 +34,12 @@ for l in tqdm(range(w_2_list.size)):
 
             ratio = incidence_binned[1]/incidence_binned[0]
 
-            if ratio > 1.5:
+            if ratio > 1.8:
                 weights[j] = w_1_list[m]
 
             if ratio < 1/1.5:
                 weights[j] = w_2_list[l]
+
 
         parameters.posture['w'] = weights.T
         posture_neuron = define_and_initialize(LIF_primitive, parameters.posture)
@@ -65,9 +66,12 @@ for l in tqdm(range(w_2_list.size)):
 
         TPR = true_positive/(true_positive+false_negative)
         FPR = false_positive/(false_positive+true_negative)
-        ACC = (true_positive+true_negative)/(true_positive+true_negative+false_positive+false_negative)
+        TNR = true_negative/(true_negative + false_positive)
 
-        accuracy_list[l, m] = ACC
+        ACC = (true_positive+true_negative)/(true_positive+true_negative+false_positive+false_negative)
+        ACC_balanced = (TPR + TNR)/2
+
+        accuracy_list[l, m] = ACC_balanced
 
 max_index = np.where(np.ndarray.flatten(accuracy_list) == np.max(accuracy_list))
 spike_posture, spike_posture_binned = spike_posture_list[max_index[0][0]], spike_posture_binned_list[max_index[0][0]]
@@ -76,7 +80,7 @@ fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 
 for i in range(w_2_list.size):
     ax.scatter(w_1_list * 1000, accuracy_list[i, :], color=parameters.general['colors'][i], s=13)
-    ax.plot(w_1_list*1000, accuracy_list[i, :], label=f'w_inh = {np.round(w_2_list[i]*1000, 2)}',
+    ax.plot(w_1_list*1000, accuracy_list[i, :], label=f'w_inh = {np.round(w_2_list[i]*1000, 2)} mV',
             color=parameters.general['colors'][i])
 
 plot_climbing_accuracy(fig, ax)
