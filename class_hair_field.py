@@ -31,10 +31,10 @@ class HairField:
 
     def get_double_receptive_field(self):
         self.get_receptive_field()
-        rf1 = self.receptive_field
+        rf1 = self.receptive_field.copy()
 
-        max_joint_angle, min_joint_angle = self.max_joint_angle, self.min_joint_angle
-        self.max_joint_angle, self.min_joint_angle = min_joint_angle, max_joint_angle
+        self.max_joint_angle, self.min_joint_angle = self.min_joint_angle, self.max_joint_angle
+        self.get_receptive_field()
 
         self.get_receptive_field()
         self.receptive_field = np.hstack((self.receptive_field, rf1))
@@ -45,8 +45,8 @@ class HairField:
         slope = self.max_angle / (self.receptive_field[1, :] - self.receptive_field[0, :])
 
         slope, min_rf, x = np.tile(slope, (x.size, 1)), np.tile(min_rf, (x.size, 1)), np.tile(x, (self.N_hairs, 1)).T
-        out = torch.relu(torch.from_numpy(slope * (x - self.receptive_field[0, :])))
-        out[out > 90] = 90
+
+        out = np.clip(slope * (x - self.receptive_field[0, :]), 0, 90)
 
         return out
 

@@ -35,13 +35,14 @@ def get_firing_rate(spike_train, dt):
     return firing_rate, spike_index
 
 
-def get_firing_rate_2(spike_train, dt, t=0.5, sigma=3):
-    n = int(t / dt)
+def get_firing_rate_2(spike_train, dt, t=0.5, sigma=3, nan_bool=True):
+    n = int(t/dt)
 
-    firing_rate = np.convolve(spike_train, np.ones(n) / t, mode='same')
+    firing_rate = np.convolve(spike_train.astype(int), np.ones(n), mode='same')/t
     firing_rate = gaussian_filter1d(firing_rate, sigma=sigma)
 
-    firing_rate[firing_rate < 0.000001] = np.nan
+    if nan_bool:
+        firing_rate[firing_rate < 0.000001] = np.nan
 
     return firing_rate
 
@@ -58,7 +59,7 @@ def interpolate(old_array, t_total, n_steps, boolean=False):
     for i in range(old_array.shape[1]):
         new_array[:, i] = np.interp(x_new, x_old, old_array[:, i])
         if not boolean:
-            new_array[:, i] = gaussian_filter(new_array[:, i], sigma=5)
+            new_array[:, i] = gaussian_filter1d(new_array[:, i], sigma=5)
         if boolean:
             new_array[:, i][new_array[:, i] > 0.5] = 1
             new_array[:, i][new_array[:, i] <= 0.50] = 0
@@ -113,60 +114,53 @@ def get_encoding(w_pos, w_vel):
 
     encoding_filter = [1, 0, 0, 0, 0]
     negative_mask = np.array(list(permutations(encoding_filter, 3)))
-
-    encoding_filter = [0, 1, 1, 1, 1]
-    positive_mask = np.array(list(permutations(encoding_filter, 3)))
-
     negative_mask = np.tile(negative_mask, (6, 1))
-    positive_mask = np.tile(positive_mask, (6, 1))
+    positive_mask = 1 - negative_mask
+
     weights = np.tile(weights, (6, 1))
     synapse_type = synapse_type*6
 
     return perm, synapse_type, weights, negative_mask, positive_mask
 
 
-def gaussian_filter(x, sigma=5):
-    input_min = min(x)
-    input_max = max(x)
-    x = img.gaussian_filter1d(x, sigma)
-    y = input_min + (((x-min(x))*(input_max-input_min))/(max(x)-min(x)))
-    return y
-
 def convert_to_bins(old_array, n_bins, sum_bool=False):
-    old_array = old_array.T
+    old_array = np.transpose(old_array)
+
     while old_array.shape[1] != n_bins:
         try:
-            old_array = np.sum(old_array.reshape(old_array.shape[0], n_bins, int(old_array.shape[1] / n_bins)), axis=2)
+            old_array = np.sum(old_array.reshape(old_array.shape[0], n_bins, -1), axis=2)
         except:
-            old_array = np.vstack((old_array.T, old_array[:, -1].T)).T
-    if not sum_bool:
-        old_array[old_array > 0] = 1
+            old_array = np.column_stack((old_array, old_array[:, -1]))
 
-    return old_array.T
+    if not sum_bool:
+        old_array = (old_array > 0).astype(int)
+
+    return np.transpose(old_array)
 
 
 def get_stance_swing_bins(gait, spike_train):
     change_index = np.where(gait[:-1] != gait[1:])[0]
-    n_phases = int(change_index.size/2)-1
-    swing_bin_rate, swing_bin_likelihood, stance_bin_rate, stance_bin_likelihood = \
-        [np.zeros((n_phases, i)) for i in [15, 15, 15, 15]]
+    n_phases = (change_index.size // 2) - 1
+
+    swing_bin_rate = np.zeros((n_phases, 15))
+    stance_bin_rate = np.zeros((n_phases, 15))
+    swing_bin_likelihood = np.zeros((n_phases, 15))
+    stance_bin_likelihood = np.zeros((n_phases, 15))
 
     for i in range(n_phases):
-        k = 0
-        if gait[0] == 0:
-            k = 1
+        start_idx = change_index[2*i + (1 if gait[0] == 0 else 0)]
+        end_idx_swing = change_index[1 + 2*i + (1 if gait[0] == 0 else 0)]
+        end_idx_stance = change_index[2 + 2*i + (1 if gait[0] == 0 else 0)]
 
-        spikes_swing = np.array_split(spike_train[change_index[2*i+k]:change_index[1+2*i+k]], 15)
-        spikes_stance = np.array_split(spike_train[change_index[1+2*i+k]:change_index[2+2*i+k]], 15)
+        spikes_swing = np.array_split(spike_train[start_idx:end_idx_swing], 15)
+        spikes_stance = np.array_split(spike_train[end_idx_swing:end_idx_stance], 15)
 
         for j in range(15):
             swing_bin_rate[i, j] = np.sum(spikes_swing[j])
-
-        for j in range(15):
             stance_bin_rate[i, j] = np.sum(spikes_stance[j])
 
-        stance_bin_likelihood[stance_bin_rate > 0.5] = 1
-        swing_bin_likelihood[swing_bin_rate > 0.5] = 1
+        stance_bin_likelihood[i, stance_bin_rate[i, :] > 0.5] = 1
+        swing_bin_likelihood[i, swing_bin_rate[i, :] > 0.5] = 1
 
     swing_bin_rate = np.mean(swing_bin_rate, axis=0)
     stance_bin_rate = np.mean(stance_bin_rate, axis=0)
@@ -188,39 +182,21 @@ def prepare_spikes_primitive(spike_velocity, spike_position, permutations, mask)
 
 
 def low_pass_filter(x, dt, tau):
-    y = np.zeros(len(x))
-    alpha = dt/(dt+tau)
+    alpha = dt / (dt + tau)
+    y = np.zeros_like(x)
     y[0] = alpha * x[0]
-    for i in np.arange(1, len(x), 1):
-        y[i] = alpha * x[i] + (1-alpha) * y[i-1]
 
-    return y
-
-
-def high_pass_filter(x, dt, tau):
-    y = np.zeros(len(x))
-    alpha = dt/(dt+tau)
-    y[0] = x[0]
-    for i in np.arange(1, len(x), 1):
-        y[i] = alpha*(y[i-1] + x[i] - x[i-1])
-
-    return y
-
-
-def normalize(x, maximum=False, minimum=False, t_0=0, t_1=1):
-    if not maximum:
-        y = (x-np.min(x))/(np.max(x) - np.min(x))*(t_1-t_0)+t_0
-    else:
-        y = (x - maximum) / (maximum - minimum)*(t_1-t_0)+t_0
+    for i in range(1, len(x)):
+        y[i] = alpha * x[i] + (1 - alpha) * y[i - 1]
 
     return y
 
 
 def get_pitch(data, n_simulations, parameters):
     pitch = np.empty((parameters.general['N_steps'], n_simulations))
+
     for i in range(n_simulations):
-        pitch_single = np.array(data[f'simulation_{i}'][2][1, :])
-        pitch_single = pitch_single[:parameters.general['N_frames']]
+        pitch_single = data[f'simulation_{i}'][2][1, :parameters.general['N_frames']]
         pitch[:, i] = interpolate(pitch_single, parameters.general['t_total'], parameters.general['N_steps'])
 
     pitch_max, pitch_min = np.max(pitch), np.min(pitch)
@@ -230,14 +206,6 @@ def get_pitch(data, n_simulations, parameters):
 
 
 def get_indexes_legs(indexes_old):
-    leg, indexes_new = [], []
-    for i in range(indexes_old[0].size):
-        index = indexes_old[0][i]
-        j = 0
-        while index > 59:
-            j += 1
-            index -= 60
-        else:
-            leg.append(j)
-            indexes_new.append(index)
+    leg = np.floor_divide(indexes_old[0], 60)
+    indexes_new = np.mod(indexes_old[0], 60)
     return indexes_new, leg

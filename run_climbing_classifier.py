@@ -8,8 +8,8 @@ N_simulations = 2
 N_simulations_test = 2
 N_plot = 1
 n_bins = 50
-w_1_list = np.linspace(0.75E-3, 1.75E-3, num=30)
-w_2_list = np.linspace(0E-3, -1.25E-3, num=5)
+w_1_list = np.linspace(0.75E-3, 1.75E-3, num=10)
+w_2_list = np.linspace(0E-3, -1.25E-3, num=1)
 
 data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')

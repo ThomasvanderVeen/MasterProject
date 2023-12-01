@@ -7,31 +7,38 @@ from class_hair_field import HairField
 from plots import *
 from functions import *
 
-N_simulations = 1
-w_pos = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
-#w_pos = [200e-3, 0, 200e-3, 200e-3, 200-3]
-w_vel = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
-permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(w_pos, w_vel)
+N_SIMULATIONS = 10
+W_POS = [14e-3, 0, 12e-3, 10e-3, 7.5e-3]
+W_VEL = [12e-3, 14.5e-3, 0, 11e-3, 12e-3]
+
+permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter = get_encoding(W_POS, W_VEL)
 permutations = get_primitive_indexes(6)
 data = pickle_open('Data/simulation_data')
 
 joint_angles_list, primitive_list, position_list, velocity_list, sensory_list = [], [], [], [], []
 
-for k in tqdm(range(N_simulations), desc='Network progress'):
+for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
+
     joint_angles = np.array(data[f'simulation_{k}'][0]).T
 
-    parameters = Parameters(max_joint_angle=np.amax(joint_angles, axis=0), min_joint_angle=np.amin(joint_angles, axis=0),
-                            n_hairs=100, t_total=5, dt=0.001, n_angles=18)
+    parameters = Parameters(
+        max_joint_angle=np.amax(joint_angles, axis=0),
+        min_joint_angle=np.amin(joint_angles, axis=0),
+        n_hairs=100,
+        t_total=20,
+        dt=0.001,
+        n_angles=18
+    )
     parameters.primitive['w'] = weights_primitive
 
     N_frames = parameters.general['N_frames']
     if joint_angles.shape[0] < N_frames:
         raise Exception(f'Total frames exceeds maximum: {joint_angles.shape[0]} < {N_frames}')
 
-    joint_angles = joint_angles[:parameters.general['N_frames']]
+    joint_angles = joint_angles[:N_frames]
     joint_angles = interpolate(joint_angles, parameters.general['t_total'], parameters.general['N_steps'])
 
-    hair_angles = np.zeros((joint_angles.shape[0], 2*joint_angles.shape[1]*parameters.hair_field['N_hairs']))
+    hair_angles = np.zeros((joint_angles.shape[0], 2 * joint_angles.shape[1] * parameters.hair_field['N_hairs']))
 
     for i in range(18):
         hair_field = HairField(parameters.hair_field)
@@ -44,7 +51,7 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
     neurons = [AdEx, LIF, LIF_simple, LIF_primitive]
     parameters_list = [parameters.sensory, parameters.position, parameters.velocity, parameters.primitive]
     sensory_neuron, position_neuron, velocity_neuron, primitive_neuron = \
-        [define_and_initialize(neurons[i], parameters_list[i]) for i in range(len(neurons))]
+        [define_and_initialize(neuron_class, params) for neuron_class, params in zip(neurons, parameters_list)]
 
     time, spike_sensory = np.array([]), torch.empty(hair_angles.shape)
     spike_position, spike_velocity, spike_primitive = \
@@ -63,10 +70,11 @@ for k in tqdm(range(N_simulations), desc='Network progress'):
 
         _, spike_primitive[i, :] = primitive_neuron.forward(pos_vel_spikes)
 
-    primitive_list.append(spike_primitive.numpy()), joint_angles_list.append(joint_angles),
-    position_list.append(spike_position.numpy()), velocity_list.append(spike_velocity.numpy()),
+    primitive_list.append(spike_primitive.numpy())
+    joint_angles_list.append(joint_angles)
+    position_list.append(spike_position.numpy())
+    velocity_list.append(spike_velocity.numpy())
     sensory_list.append(spike_sensory.numpy())
-
 
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
 pickle_save(sensory_list, 'Data/sensory_list')
@@ -83,29 +91,28 @@ ax2 = ax1.twinx()
 
 for i in range(2):
     firing_rate, spikes_index = get_firing_rate(spike_position[:, i], parameters.general['dt'])
-
     ax1.plot(time[spikes_index], firing_rate)
 
 ax2.plot(time, joint_angles[:, 0], color='black')
-ax2.plot(time, np.full(len(time), np.max(joint_angles[:, 0])/2 + np.min(joint_angles[:, 0])/2), linestyle='dotted',
+ax2.plot(time, np.full(len(time), np.max(joint_angles[:, 0]) / 2 + np.min(joint_angles[:, 0]) / 2), linestyle='dotted',
          color='black')
 plot_position_interneuron(ax1, ax2, fig, 'bi')
 
 fig2, ax3 = plt.subplots()
 ax4 = ax3.twinx()
 
-N_hairs, N_half = parameters.hair_field['N_hairs'], int(parameters.hair_field['N_hairs']/2)
+N_hairs, N_half = parameters.hair_field['N_hairs'], parameters.hair_field['N_hairs']//2
 diff = hair_field.max_list[0] - hair_field.min_list[0]
 
 for i in range(N_half):
     spike_sensory[spike_sensory == 0] = np.nan
-    ax3.scatter(time, (-i+N_half)*spike_sensory[:, i+N_half], color='dodgerblue', s=1)
-    ax3.scatter(time, (1+i+N_half)*spike_sensory[:, i+N_half+N_hairs], color='red', s=1)
+    ax3.scatter(time, (-i + N_half)*spike_sensory[:, i + N_half], color='dodgerblue', s=1)
+    ax3.scatter(time, (1 + i + N_half)*spike_sensory[:, i + N_half + N_hairs], color='red', s=1)
 
 ax4.plot(time, joint_angles[:, 0], color='black')
-ax4.plot(time, np.full(time.shape, diff/2 + hair_field.min_list[0]), linestyle='dotted', color='red')
-ax3.set_ylim(1-N_hairs*.05, N_hairs*1.05)
-ax4.set_ylim(hair_field.min_list[0]-.05*diff, hair_field.max_list[0]+.05*diff)
+ax4.plot(time, np.full(time.shape, diff / 2 + hair_field.min_list[0]), linestyle='dotted', color='red')
+ax3.set_ylim(1 - N_hairs * .05, N_hairs * 1.05)
+ax4.set_ylim(hair_field.min_list[0] - .05 * diff, hair_field.max_list[0] + .05 * diff)
 
 plot_spike_timing(ax3, ax4, fig2, N_hairs)
 
@@ -113,7 +120,7 @@ plot_spike_timing(ax3, ax4, fig2, N_hairs)
 Velocity neuron testing
 '''
 spike_velocity = spike_velocity.numpy()
-'''
+
 fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 ax1 = ax.twinx()
 
@@ -128,7 +135,7 @@ ax1.plot(time, np.full(time.size, 0))
 fig.savefig('Images/movement_binary')
 
 spike_velocity[spike_velocity == 0] = np.nan
-'''
+
 fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 
 plt.plot(time, joint_angles[:, 0], color='black')
@@ -136,7 +143,6 @@ plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 0], color='blue', s=10)
 plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 1], color='red', s=10)
 
 plot_movement_interneuron_network(ax, fig)
-
 
 TP, FP, TN, FN = [], [], [], []
 for i in range(len(joint_angles_list)):
@@ -170,9 +176,9 @@ Primitive neuron testing (ROC plot)
 
 N_joints = joint_angles.shape[1]
 N_legs = 6
-true_positive, false_positive, true_negative, false_negative = [np.empty((N_simulations, 360)) for _ in range(4)]
+true_positive, false_positive, true_negative, false_negative = [np.empty((N_SIMULATIONS, 360)) for _ in range(4)]
 ground_truth_list = []
-for k in tqdm(range(N_simulations), desc='ROC plot progress'):
+for k in tqdm(range(N_SIMULATIONS), desc='ROC plot progress'):
     joint_angles, spike_primitive = joint_angles_list[k], primitive_list[k]
     ground_truth, ground_vel, ground_pos = [np.zeros([parameters.general['N_steps'], i]) for i in [360, 36, 36]]
 
@@ -238,22 +244,38 @@ plot_primitive_ROC(ax, fig)
 '''
 Primitive neuron testing (PSTH plot)
 '''
-
+position_angles = ['alpha-', 'alpha+', 'beta-', 'beta+', 'gamma-', 'gamma+']
 stance, swing = np.empty((6, 60)), np.empty((6, 60))
 
 for m in tqdm(range(6), desc='PSTH plot progress'):
-    swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood = [np.empty((N_simulations, 60, i)) for
+    swing_bin_rate, stance_bin_rate, swing_bin_likelihood, stance_bin_likelihood = [np.empty((N_SIMULATIONS, 60, i)) for
                                                                                     i in [15, 15, 15, 15]]
-    for k in range(N_simulations):
+    #swing_bin_likelihood_pos = np.empty((N_SIMULATIONS, 6, 15))
+    #stance_bin_likelihood_pos = np.empty((N_SIMULATIONS, 6, 15))
+    swing_bin_likelihood_vel = np.empty((N_SIMULATIONS, 6, 15))
+    stance_bin_likelihood_vel = np.empty((N_SIMULATIONS, 6, 15))
+
+    for k in range(N_SIMULATIONS):
         spike_primitive = primitive_list[k]
+        spike_position = position_list[k]
+        spike_velocity = velocity_list[k]
         gait = np.array(data[f'simulation_{k}'][1])[m, :]
         gait = gait[:parameters.general['N_frames']]
         gait = interpolate(gait, parameters.general['t_total'], parameters.general['N_steps'], True)
         for i in range(60):
             swing_bin_rate[k, i, :], stance_bin_rate[k, i, :], swing_bin_likelihood[k, i, :], stance_bin_likelihood[k, i, :] = \
                 get_stance_swing_bins(gait, spike_primitive[:, i + 60*m])
+        for i in range(6):
+            #_, _, swing_bin_likelihood_pos[k, i, :], stance_bin_likelihood_pos[k, i, :] = \
+            #    get_stance_swing_bins(gait, spike_position[:, i + 6*m])
+            _, _, swing_bin_likelihood_vel[k, i, :], stance_bin_likelihood_vel[k, i, :] = \
+                get_stance_swing_bins(gait, spike_velocity[:, i + 6*m])
+
 
     swing_bin_likelihood, stance_bin_likelihood = np.mean(swing_bin_likelihood, axis=0), np.mean(stance_bin_likelihood, axis=0)
+    #swing_bin_likelihood_pos, stance_bin_likelihood_pos = np.mean(swing_bin_likelihood_pos, axis=0), np.mean(stance_bin_likelihood_pos, axis=0)
+    swing_bin_likelihood_vel, stance_bin_likelihood_vel = np.mean(swing_bin_likelihood_vel, axis=0), np.mean(stance_bin_likelihood_vel, axis=0)
+
     swing_sum, stance_sum = np.mean(swing_bin_likelihood, axis=1), np.mean(stance_bin_likelihood, axis=1)
 
     swing[m, :] = swing_sum / (stance_sum + swing_sum)
@@ -265,7 +287,18 @@ for m in tqdm(range(6), desc='PSTH plot progress'):
         ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood[i, :], color='red', marker='^')
         ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood[i, :], color='blue', marker='^')
 
-        plot_psth(ax, fig, i, m)
+        plot_psth(ax, fig, i, m, permutations_name[i], 'primitive')
+
+    for i in range(6):
+        #ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood_pos[i, :], color='red', marker='^')
+        #ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood_pos[i, :], color='blue', marker='^')
+
+        #plot_psth(ax, fig, i, m, position_angles[i], 'position')
+
+        ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood_vel[i, :], color='red', marker='^')
+        ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood_vel[i, :], color='blue', marker='^')
+
+        plot_psth(ax, fig, i, m, position_angles[i], 'velocity')
 
 x = [30, 90, 150, 210, 270, 330]
 legs = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']

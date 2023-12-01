@@ -131,12 +131,17 @@ def plot_primitive_ROC(ax, fig):
     return
 
 
-def plot_psth(ax, fig, neuron, leg):
+def plot_psth(ax, fig, neuron, leg, permutations_name, label):
     ax.set_ylabel('Likelihood of Spiking')
     fig.text(0.33, 0.04, 'Swing', ha='center')
     fig.text(0.66, 0.04, 'Stance')
     ax.set_xticks([])
-    fig.savefig(f'Images_PSTH/neuron_{neuron}_leg_{leg}')
+    if label == 'primitive':
+        fig.savefig(f'Images_PSTH/prim_{permutations_name}_leg_{leg}_neuron_{neuron}')
+    elif label == 'position':
+        fig.savefig(f'Images_PSTH/pos_{permutations_name}_leg_{leg}')
+    elif label == 'velocity':
+        fig.savefig(f'Images_PSTH/vel_{permutations_name}_leg_{leg}')
     plt.cla()
 
     return
