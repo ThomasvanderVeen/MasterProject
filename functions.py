@@ -1,8 +1,9 @@
+import itertools
 import pickle
 import torch
 import numpy as np
 from tqdm import tqdm
-from itertools import permutations
+from itertools import product
 import scipy.ndimage as img
 from scipy.ndimage import gaussian_filter1d
 import matplotlib.pyplot as plt
@@ -77,34 +78,37 @@ def define_and_initialize(class_handle, parameters):
     return instance
 
 
-def get_primitive_indexes(n):
-    base_perm = np.array(list(permutations([-np.inf, 0, 1, 2, 3], 3)))
-    extra = np.array([0, 4, 8])
-    extra = np.tile(extra, (base_perm.shape[0], 1))
-    final_perm = (base_perm + extra).clip(min=0)
-
-    extra_2 = np.linspace(0, 12 * (n - 1), num=n).repeat(180)
-    final_perm = np.tile(final_perm.flatten(), n) + extra_2
-
-    return final_perm.astype(int)
-
-
-def get_encoding(w_pos, w_vel):
+def get_encoding(w_pos, w_vel, n):
     encoding = ['none', 'Vel-', 'Vel+', 'Pos-', 'Pos+']
-    perm = np.array(list(permutations(encoding, 3)))
+    perm = np.array(list(product(encoding, repeat=3)))
+    base_perm = np.array(list(product([-np.inf, 0, 1, 2, 3], repeat=3)))
 
     synapse_type = []
-    weights = np.zeros_like(perm, dtype=float)
 
     for permutation in perm:
 
         if 'none' in permutation:
-            synapse_type.append(2 if (permutation == 'Pos-').sum() + (permutation == 'Pos+').sum() == 2
+            synapse_type.append(0 if (permutation == 'Pos+').sum() + (permutation == 'Pos-').sum() == 2
                                 else
                                 (1 if (permutation == 'Vel+').sum() + (permutation == 'Vel-').sum() == 2
-                                 else 0))
+                                 else
+                                 (2 if (permutation == 'Pos+').sum() + (permutation == 'Pos-').sum() == 1
+                                  and (permutation == 'Vel+').sum() + (permutation == 'Vel-').sum() == 1
+                                  else -1)))
         else:
-            synapse_type.append(4 if (permutation == 'Pos-').sum() + (permutation == 'Pos-').sum() == 2 else 3)
+            synapse_type.append(3 if (permutation == 'Pos+').sum() + (permutation == 'Pos-').sum() == 2
+                                else
+                                (4 if (permutation == 'Vel+').sum() + (permutation == 'Vel-').sum() == 2
+                                 else
+                                 (5 if (permutation == 'Pos+').sum() + (permutation == 'Pos-').sum() == 3
+                                  else 6)))
+
+    zero_index = np.where(np.array(synapse_type) == -1)[0]
+
+    synapse_type = list(np.delete(synapse_type, zero_index))
+    perm = np.delete(perm, zero_index, axis=0)
+    base_perm = np.delete(base_perm, zero_index, axis=0)
+    weights = np.zeros_like(perm, dtype=float)
 
     for i, j in np.ndindex(weights.shape):
         if 'Pos' in perm[i, j]:
@@ -112,15 +116,22 @@ def get_encoding(w_pos, w_vel):
         elif 'Vel' in perm[i, j]:
             weights[i, j] = w_vel[synapse_type[i]]
 
-    encoding_filter = [1, 0, 0, 0, 0]
-    negative_mask = np.array(list(permutations(encoding_filter, 3)))
+    negative_mask = np.zeros_like(perm, dtype=float)
+    negative_mask[perm == 'none'] = 1
     negative_mask = np.tile(negative_mask, (6, 1))
     positive_mask = 1 - negative_mask
 
     weights = np.tile(weights, (6, 1))
     synapse_type = synapse_type*6
 
-    return perm, synapse_type, weights, negative_mask, positive_mask
+    extra = np.array([0, 4, 8])
+    extra = np.tile(extra, (base_perm.shape[0], 1))
+    final_perm = (base_perm + extra).clip(min=0)
+
+    extra_2 = np.linspace(0, 12 * (n - 1), num=n).repeat(3*final_perm.shape[0])
+    final_perm = (np.tile(final_perm.flatten(), n) + extra_2).astype(int)
+
+    return perm, synapse_type, weights, negative_mask, positive_mask, final_perm
 
 
 def convert_to_bins(old_array, n_bins, sum_bool=False):
@@ -176,7 +187,7 @@ def prepare_spikes_primitive(spike_velocity, spike_position, permutations, mask)
         toepel += (spike_velocity[[0 + 2*i, 1 + 2*i]], spike_position[[0 + 2*i, 1 + 2*i]])
 
     pos_vel_spikes = torch.concat(toepel)
-    pos_vel_spikes = pos_vel_spikes[permutations].reshape((360, 3))*mask
+    pos_vel_spikes = pos_vel_spikes[permutations].reshape(mask.shape)*mask
 
     return pos_vel_spikes
 
@@ -206,6 +217,6 @@ def get_pitch(data, n_simulations, parameters):
 
 
 def get_indexes_legs(indexes_old):
-    leg = np.floor_divide(indexes_old[0], 60)
-    indexes_new = np.mod(indexes_old[0], 60)
+    leg = np.floor_divide(indexes_old[0], 112)
+    indexes_new = np.mod(indexes_old[0], 112)
     return indexes_new, leg

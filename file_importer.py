@@ -3,14 +3,14 @@ import pickle
 import numpy as np
 import scipy.io
 
-desktop = True
+DESKTOP = True
 DATA_DIR = "Data"
 SIMULATION_DATA_FILE = "simulation_data"
 DESKTOP_PATH = r"C:\DOCUMENTEN\RUG\Master\Master Research Project\Kinematic_Data"
 LAPTOP_PATH = r"C:\Users\thoma\Documents\RUG\Master Project\Kinematic_Data"
 LINUX_PATH = r"/home/s3488926/Documents/master_project/drive/Kinematic_Data"
-STEPS = '_48_'
-T_TOTAL = 20
+STEPS = '_00_'
+T_TOTAL = 6
 N_FRAMES = 200 * T_TOTAL
 LEGS = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
 
@@ -28,7 +28,6 @@ def process_simulation_file(file_path):
             N[j] = int(change_index.size / 2) - 1
         gait = np.ndarray.flatten(np.array([simulation_file['gait'][0][0][0][:, 0]]))
         if gait.size > N_FRAMES and np.min(N) > 1 and STEPS in file_path:
-            print(gait.size)
             for leg in range(len(LEGS)):
                 for joint in range(3):
                     if joint == 1:
@@ -41,10 +40,9 @@ def process_simulation_file(file_path):
                 gait_list = np.ndarray.flatten(np.array([simulation_file['gait'][0][0][0][:, leg]]))
                 pitch = np.array([simulation_file['T3'][0][0][2][:, :3]])[0, :, :].T
                 gaits.append(gait_list)
+            return joint_angles, gaits, pitch
         else:
             return None, None, None
-
-        return joint_angles, gaits, pitch
 
     except:
         return None, None, None
@@ -52,7 +50,7 @@ def process_simulation_file(file_path):
 
 def main():
     if os.name == 'nt':
-        if desktop:
+        if DESKTOP:
             path = DESKTOP_PATH
             print("Windows desktop path used")
         else:
