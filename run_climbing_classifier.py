@@ -83,7 +83,7 @@ for i in range(w_2_list.size):
     ax.plot(w_1_list*1000, accuracy_list[i, :], label=f'w_inh = {np.round(w_2_list[i]*1000, 2)} mV',
             color=parameters.general['colors'][i])
 
-plot_climbing_accuracy(fig, ax)
+plot_climbing_accuracy(fig, ax, 'climbing')
 
 fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
 

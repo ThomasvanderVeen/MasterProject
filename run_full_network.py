@@ -4,16 +4,17 @@ from class_primitive_neuron import LIF_primitive
 from class_position_neuron import LIF
 from class_sensory_neuron import AdEx
 from class_hair_field import HairField
-from plots import *
+import plots
 from functions import *
 
 
 N_LEGS = 6
 N_SIMULATIONS = 1
-W_POS = [12e-3, 12e-3, 12e-3, 9.5e-3, 8e-3, 8e-3, 9.5e-3]
-W_VEL = [12e-3, 12e-3, 12e-3, 9.5e-3, 8e-3, 8e-3, 9.5e-3]
+W_POS = [11.43e-3, 0, 11.43e-3, 11.43e-3, 14e-3, 8e-3, 0e-3]
+W_VEL = [0e-3, 17.4e-3, 14e-3, 2.5e-3, 5.71e-3, 0e-3, 14e-3]
 
-permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations = get_encoding(W_POS, W_VEL, N_LEGS)
+permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, base_perm = \
+    get_encoding(W_POS, W_VEL, N_LEGS)
 data = pickle_open('Data/simulation_data')
 
 joint_angles_list, primitive_list, position_list, velocity_list, sensory_list = [], [], [], [], []
@@ -67,7 +68,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         reshaped_spikes = torch.reshape(spike_sensory[i, :], (parameters.velocity['n'], (parameters.hair_field['N_hairs'])))
 
         _, spike_velocity[i, :] = velocity_neuron.forward(reshaped_spikes)
-        _, spike_position[i, :] = position_neuron.forward(reshaped_spikes[:, int(parameters.hair_field['N_hairs']/2)-1:])
+        _, spike_position[i, :] = position_neuron.forward(reshaped_spikes[:, int(parameters.hair_field['N_hairs']/2)-20:])
 
         pos_vel_spikes = prepare_spikes_primitive(spike_velocity[i, :], spike_position[i, :], permutations, primitive_filter)
         _, spike_primitive[i, :] = primitive_neuron.forward(pos_vel_spikes)
@@ -78,11 +79,11 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     velocity_list.append(spike_velocity.numpy())
     sensory_list.append(spike_sensory.numpy())
 
-pickle_save(joint_angles_list, 'Data/joint_angles_list')
-pickle_save(sensory_list, 'Data/sensory_list')
-pickle_save(position_list, 'Data/position_list')
-pickle_save(velocity_list, 'Data/velocity_list')
-pickle_save(primitive_list, 'Data/primitive_list')
+#pickle_save(joint_angles_list, 'Data/joint_angles_list')
+#pickle_save(sensory_list, 'Data/sensory_list')
+#pickle_save(position_list, 'Data/position_list')
+#pickle_save(velocity_list, 'Data/velocity_list')
+#pickle_save(primitive_list, 'Data/primitive_list')
 
 '''
 Position neuron testing
@@ -92,13 +93,13 @@ fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
 
 for i in range(2):
-    firing_rate = get_firing_rate_2(spike_position[:, i].numpy(), parameters.general['dt'], t=0.02)
+    firing_rate = get_firing_rate_2(spike_position[:, i].numpy(), parameters.general['dt'], t=0.05)
     ax1.plot(time, firing_rate, color=parameters.general['colors'][i])
 
 ax2.plot(time, joint_angles[:, 0], color='black')
 ax2.plot(time, np.full(len(time), np.max(joint_angles[:, 0]) / 2 + np.min(joint_angles[:, 0]) / 2), linestyle='dotted',
          color='black')
-plot_position_interneuron(ax1, ax2, fig, 'bi')
+plots.plot_position_interneuron(ax1, ax2, fig, 'bi')
 
 fig2, ax3 = plt.subplots()
 ax4 = ax3.twinx()
@@ -112,11 +113,11 @@ for i in range(N_half)[::10]:
     ax3.scatter(time, (1 + i + N_half)*spike_sensory[:, i + N_half + N_hairs], color=parameters.general['colors'][1], s=1)
 
 ax4.plot(time, joint_angles[:, 0], color='black')
-ax4.plot(time, np.full(time.shape, diff / 2 + hair_field.min_list[0]), linestyle='dotted', color=parameters.general['colors'][2])
+ax4.plot(time, np.full(time.shape, diff / 2 + hair_field.min_list[0]), linestyle='dotted', color='black')
 ax3.set_ylim(1 - N_hairs * .05, N_hairs * 1.05)
 ax4.set_ylim(hair_field.min_list[0] - .05 * diff, hair_field.max_list[0] + .05 * diff)
 
-plot_spike_timing(ax3, ax4, fig2, N_hairs)
+plots.plot_spike_timing(ax3, ax4, fig2, N_hairs)
 
 '''
 Velocity neuron testing
@@ -126,15 +127,15 @@ spike_velocity = spike_velocity.numpy()
 fig, ax = plt.subplots()
 ax1 = ax.twinx()
 
-firing_rate_down = get_firing_rate_2(spike_velocity[:, 0], parameters.general['dt'], t=0.02)
-firing_rate_up = get_firing_rate_2(spike_velocity[:, 1], parameters.general['dt'], t=0.02)
+firing_rate_down = get_firing_rate_2(spike_velocity[:, 0], parameters.general['dt'], t=0.05)
+firing_rate_up = get_firing_rate_2(spike_velocity[:, 1], parameters.general['dt'], t=0.05)
 
-ax.plot(time[1:], np.diff(joint_angles[:, 0]), color='black')
+ax.plot(time[1:], np.diff(joint_angles[:, 0])/parameters.general['dt'], color='black')
 ax1.plot(time, firing_rate_down, color=parameters.general['colors'][0])
 ax1.plot(time, firing_rate_up, color=parameters.general['colors'][1])
-ax.plot(time, np.full(time.size, 0), color=parameters.general['colors'][2])
-
-plot_movement_binary(ax, ax1, fig)
+ax.plot(time, np.full(time.size, 0), color='black', linestyle='dotted')
+ax.set_xlim([0, 1])
+plots.plot_movement_binary(ax, ax1, fig)
 
 spike_velocity[spike_velocity == 0] = np.nan
 
@@ -144,7 +145,7 @@ plt.plot(time, joint_angles[:, 0], color='black')
 plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 0], color=parameters.general['colors'][0], s=10)
 plt.scatter(time, joint_angles[:, 0]*spike_velocity[:, 1], color=parameters.general['colors'][1], s=10)
 
-plot_movement_interneuron_network(ax, fig)
+plots.plot_movement_interneuron_network(ax, fig)
 
 TP, FP, TN, FN = [], [], [], []
 for i in range(len(joint_angles_list)):
@@ -241,11 +242,12 @@ print(f'[Primitive neuron] and of type pos-pos: {np.around(accuracy_types[0], 3)
       f'pos-pos-pos: {np.around(accuracy_types[5], 3)}, vel-vel-vel: {np.around(accuracy_types[6], 3)}')
 
 plt.plot([0, 1], [0, 1], color='red', linestyle='dotted')
-plot_primitive_ROC(ax, fig)
+plots.plot_primitive_roc(ax, fig)
 
 '''
 Primitive neuron testing (PSTH plot)
 '''
+
 position_angles = ['alpha-', 'alpha+', 'beta-', 'beta+', 'gamma-', 'gamma+']
 stance, swing = np.empty((6, permutations_name.shape[0])), np.empty((6, permutations_name.shape[0]))
 
@@ -289,7 +291,7 @@ for m in tqdm(range(6), desc='PSTH plot progress'):
         ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood[i, :], color=parameters.general['colors'][0], marker='^')
         ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood[i, :], color=parameters.general['colors'][1], marker='^')
 
-        plot_psth(ax, fig, i, m, permutations_name[i], 'primitive')
+        plots.plot_psth(ax, fig, i, m, permutations_name[i], 'primitive')
 
     for i in range(N_LEGS):
         #ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood_pos[i, :], color='red', marker='^')
@@ -300,7 +302,7 @@ for m in tqdm(range(6), desc='PSTH plot progress'):
         ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood_vel[i, :], color=parameters.general['colors'][0], marker='^')
         ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood_vel[i, :], color=parameters.general['colors'][1], marker='^')
 
-        plot_psth(ax, fig, i, m, position_angles[i], 'velocity')
+        plots.plot_psth(ax, fig, i, m, position_angles[i], 'velocity')
 
 n_primitive = permutations_name.shape[0]
 n_primitive_2 = n_primitive//2
@@ -313,14 +315,14 @@ plt.close('all')
 fig, ax = plt.subplots()
 
 for i in range(parameters.primitive['n']):
-    ax.scatter(i, swing[i], color=parameters.general['colors'][synapse_type[i]], s=8)
+    ax.scatter(i, swing[i], color=parameters.general['colors'][int(base_perm[i % base_perm.shape[0], 0])], s=8)
     if i % permutations_name.shape[0] == 0:
         ax.plot([i, i], [0, 1], color='black', linestyle='dotted')
 ax.plot([parameters.primitive['n'], parameters.primitive['n']], [0, 1], color='black', linestyle='dotted')
 ax.plot([0, parameters.primitive['n']], [0.95, 0.95], color='red', linestyle='dotted')
 ax.plot([0, parameters.primitive['n']], [0.1, 0.1], color='red', linestyle='dotted')
 
-plot_swing_stance(ax, fig, x, legs)
+plots.plot_swing_stance(ax, fig, x, legs)
 
 indexes_swing = np.where(swing > 0.95)
 indexes_stance = np.where(swing < 0.1)

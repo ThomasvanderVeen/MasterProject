@@ -1,13 +1,10 @@
-import matplotlib.pyplot as plt
-import os
-import numpy as np
 from matplotlib.lines import Line2D
-import matplotlib
 import seaborn as sns
 import matplotlib.pylab as pylab
+from functions import *
 
-if not os.path.exists("Images"):
-    os.makedirs("Images")
+create_directory('Images')
+create_directory('Images_PSTH')
 
 params = {'legend.fontsize': 10,
           'figure.figsize': (1.5 * 3.54, 3.54),
@@ -26,7 +23,7 @@ def plot_single_hair(ax, v):
     ax.set_xlabel("Time [s]")
     ax.set_ylabel("firing rate [imp/s]")
 
-    for i in range(5):
+    for i in range(len(ax.get_lines())):
         ax.get_lines()[i].set_color(colors[i])
 
     if isinstance(v, int):
@@ -40,7 +37,7 @@ def plot_single_hair(ax, v):
         fig.tight_layout(pad=0.5)
         fig.savefig('Images/angular_velocity.pdf')
 
-    fig.clear()
+    plt.close(fig)
 
     return
 
@@ -48,6 +45,7 @@ def plot_single_hair(ax, v):
 def plot_heat_map(df):
     heatmap = sns.heatmap(data=df, annot=True, fmt='.3g', cbar_kws={'label': 'mean absolute error (MAE)'})
     heatmap.set(xlabel='b', ylabel='V_r')
+
     plt.tight_layout(pad=0.5)
     plt.savefig('Images/heat_map.pdf')
 
@@ -65,12 +63,11 @@ def plot_hair_field(ax, name):
 
 
 def plot_position_interneuron(ax1, ax2, fig, name):
-
     ax1.set_xlabel("time [s]")
     ax1.set_ylabel("firing rate [imp/s]")
 
     if name == 'uni':
-        ax1.legend(['Model Response', 'Exp. Data'], loc='lower right' )
+        ax1.legend(['Model Response', 'Exp. Data'], loc='lower right')
     else:
         ax1.legend(['Dorsal Response', 'Ventral Response'], loc='lower right')
 
@@ -84,10 +81,9 @@ def plot_position_interneuron(ax1, ax2, fig, name):
 
 
 def plot_spike_timing(ax1, ax2, fig, n_index):
-
     ax1.set_xlabel("time [s]")
     ax1.set_ylabel("Neuron index")
-    ax1.set_yticks(np.arange(1, n_index+1)[::10])
+    ax1.set_yticks(np.arange(1, n_index + 1)[::10])
     ax2.set_ylabel("Joint Angle [°]")
 
     fig.tight_layout(pad=0.5)
@@ -98,7 +94,6 @@ def plot_spike_timing(ax1, ax2, fig, n_index):
 
 
 def plot_movement_interneuron(ax, fig):
-
     ax.set_xlabel("Velocity [°/s]")
     ax.set_ylabel("firing rate [imp/s]")
 
@@ -110,11 +105,11 @@ def plot_movement_interneuron(ax, fig):
 
 
 def plot_movement_interneuron_network(ax, fig):
-
     ax.set_xlabel("Time [s]")
     ax.set_ylabel("Joint Angle [°]")
 
     ax.legend(['Stimulus', 'Down', 'Up'], loc='lower right')
+
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron_network.pdf')
     fig.clear()
@@ -123,20 +118,18 @@ def plot_movement_interneuron_network(ax, fig):
 
 
 def plot_movement_binary(ax, ax1, fig):
-
     ax.set_xlabel("Time [s]")
-    ax.set_ylabel("Joint Angle [°]")
+    ax.set_ylabel("Joint Angle [degrees/s]")
     ax1.set_ylabel("firing rate [imp/s]")
 
-    fig.legend(['Stimulus', 'Divide', 'Down', 'Up'], loc='lower right')
+    ax1.legend(['Down', 'Up'], loc='upper right')
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_binary.pdf')
     fig.clear()
 
 
-
-def plot_primitive_ROC(ax, fig):
+def plot_primitive_roc(ax, fig):
     labels = ['pos-pos', 'vel-vel', 'pos-vel', 'pos-pos-vel', 'vel-vel-pos', 'pos-pos-pos', 'vel-vel-vel']
 
     legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
@@ -158,6 +151,7 @@ def plot_psth(ax, fig, neuron, leg, permutations_name, label):
     fig.text(0.33, 0.04, 'Swing', ha='center')
     fig.text(0.66, 0.04, 'Stance')
     ax.set_xticks([])
+    fig.tight_layout(pad=0.5)
     if label == 'primitive':
         fig.savefig(f'Images_PSTH/prim_{permutations_name}_leg_{leg}_neuron_{neuron}')
     elif label == 'position':
@@ -172,7 +166,7 @@ def plot_psth(ax, fig, neuron, leg, permutations_name, label):
 def plot_primitive_accuracy(ax, fig, tau_list):
     ax.set_xlabel('τ [ms]', fontsize=15)
     ax.set_ylabel("Balanced accuracy", fontsize=15)
-    ax.set_xticks(1000*tau_list[::2])
+    ax.set_xticks(1000 * tau_list[::2])
     ax.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v', 'mean'], loc='lower right')
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_accuracy.pdf')
@@ -184,12 +178,13 @@ def plot_primitive_weights(ax, fig, tau_list, w_1, w_2):
     ax[0].grid(True, axis='y')
     ax[1].grid(True, axis='y')
     ax[0].set_xticks([])
-    ax[1].set_xticks(1000*tau_list[::2])
-    ax[0].set_yticks(1000*w_1[::2])
-    ax[1].set_yticks(1000*w_2[::2])
+    ax[1].set_xticks(1000 * tau_list[::2])
+    ax[0].set_yticks(1000 * w_1[::2])
+    ax[1].set_yticks(1000 * w_2[::2])
     ax[0].set_ylabel('w_pos [mV]', fontsize=15)
     ax[1].set_ylabel('w_vel [mV]', fontsize=15)
-    fig.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v'], loc='upper center', bbox_to_anchor=(1.08, 0.75))
+    fig.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v'], loc='upper center',
+               bbox_to_anchor=(1.08, 0.75))
     fig.supxlabel('τ [ms]', fontsize=15)
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_weights.pdf', bbox_inches='tight')
@@ -197,13 +192,16 @@ def plot_primitive_weights(ax, fig, tau_list, w_1, w_2):
     return
 
 
-def plot_climbing_accuracy(fig, ax):
+def plot_climbing_accuracy(fig, ax, name):
     ax.set_xlabel('w_exc (mV)')
     ax.set_ylabel('Balanced accuracy')
     ax.plot()
     ax.legend()
-
-    fig.savefig('Images/climbing_accuracy.pdf', bbox_inches='tight')
+    fig.tight_layout(pad=0.5)
+    if name == 'climbing':
+        fig.savefig('Images/climbing_accuracy.pdf', bbox_inches='tight')
+    elif name == 'pitch':
+        fig.savefig('Images/pitch_accuracy.pdf', bbox_inches='tight')
 
 
 def plot_climbing_classifier(fig, ax):
@@ -222,4 +220,15 @@ def plot_swing_stance(ax, fig, x, legs):
     labels[:] = legs
     ax.set_xticklabels(labels)
     ax.set_ylabel("n_sw/(n_sw+n_st)")
+    labels = ['None', 'Vel-', 'Vel+', 'Pos-', 'Pos+']
+    legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
+                       for i in range(len(labels))]
+    ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(1.12, 0.6))
+    fig.tight_layout(pad=0.5)
     fig.savefig('Images/swing_stance.pdf')
+
+
+def plot_pitch_estimation(ax, fig):
+    ax.legend(['model', 'ground_truth'])
+
+    fig.savefig('Images/pitch_estimation.pdf')

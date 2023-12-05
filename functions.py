@@ -3,6 +3,7 @@ import pickle
 import torch
 import numpy as np
 from tqdm import tqdm
+from tqdm.contrib import itertools
 from itertools import product
 import scipy.ndimage as img
 from scipy.ndimage import gaussian_filter1d
@@ -21,6 +22,11 @@ def pickle_open(filename):
         data = pickle.load(file)
 
     return data
+
+
+def create_directory(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 
 def get_firing_rate(spike_train, dt):
@@ -131,7 +137,10 @@ def get_encoding(w_pos, w_vel, n):
     extra_2 = np.linspace(0, 12 * (n - 1), num=n).repeat(3*final_perm.shape[0])
     final_perm = (np.tile(final_perm.flatten(), n) + extra_2).astype(int)
 
-    return perm, synapse_type, weights, negative_mask, positive_mask, final_perm
+    base_perm = base_perm+1
+    base_perm[base_perm == -np.inf] = 0
+
+    return perm, synapse_type, weights, negative_mask, positive_mask, final_perm, base_perm
 
 
 def convert_to_bins(old_array, n_bins, sum_bool=False):
