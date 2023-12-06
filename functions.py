@@ -229,3 +229,9 @@ def get_indexes_legs(indexes_old):
     leg = np.floor_divide(indexes_old[0], 112)
     indexes_new = np.mod(indexes_old[0], 112)
     return indexes_new, leg
+
+
+def moving_average(a, n=3):
+    ret = np.cumsum(a, dtype=float)
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n - 1:] / n
