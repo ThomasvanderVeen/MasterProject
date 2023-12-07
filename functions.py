@@ -84,7 +84,7 @@ def define_and_initialize(class_handle, parameters):
     return instance
 
 
-def get_encoding(w_pos, w_vel, n):
+def get_encoding(w_pos=[0, 0, 0, 0, 0, 0, 0], w_vel=[0, 0, 0, 0, 0, 0, 0], n=6):
     encoding = ['none', 'Vel-', 'Vel+', 'Pos-', 'Pos+']
     perm = np.array(list(product(encoding, repeat=3)))
     base_perm = np.array(list(product([-np.inf, 0, 1, 2, 3], repeat=3)))
@@ -226,8 +226,8 @@ def get_pitch(data, n_simulations, parameters):
 
 
 def get_indexes_legs(indexes_old):
-    leg = np.floor_divide(indexes_old[0], 112)
-    indexes_new = np.mod(indexes_old[0], 112)
+    leg = np.floor_divide(indexes_old, 112)
+    indexes_new = np.mod(indexes_old, 112)
     return indexes_new, leg
 
 

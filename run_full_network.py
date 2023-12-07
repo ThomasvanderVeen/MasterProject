@@ -9,7 +9,7 @@ from functions import *
 
 
 N_LEGS = 6
-N_SIMULATIONS = 1
+N_SIMULATIONS = 11
 W_POS = [11.43e-3, 0, 11.43e-3, 11.43e-3, 14e-3, 8e-3, 0e-3]
 W_VEL = [0e-3, 17.4e-3, 14e-3, 2.5e-3, 5.71e-3, 0e-3, 14e-3]
 
@@ -27,7 +27,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
         n_hairs=200,
-        t_total=5,
+        t_total=25,
         dt=0.001,
         n_angles=18
     )
@@ -83,7 +83,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
 #pickle_save(sensory_list, 'Data/sensory_list')
 #pickle_save(position_list, 'Data/position_list')
 #pickle_save(velocity_list, 'Data/velocity_list')
-#pickle_save(primitive_list, 'Data/primitive_list')
+pickle_save(primitive_list, 'Data/primitive_list')
 
 '''
 Position neuron testing

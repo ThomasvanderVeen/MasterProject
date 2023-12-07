@@ -11,8 +11,8 @@ N_PLOT = 2
 N_SKIP = 100
 
 parameters = Parameters(t_total=25, dt=0.001)
-w_1_list = np.linspace(1E-3, 7.5E-3, num=20)
-w_2_list = np.linspace(0E-3, 0.6E-3, num=6)
+w_1_list = np.linspace(1E-3, 7.5E-3, num=1)
+w_2_list = np.linspace(0.1E-3, 0.6E-3, num=1)
 
 data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
@@ -63,6 +63,32 @@ for l, m in itertools.product(range(w_2_list.size), range(w_1_list.size)):
         accuracy_list[l, m] += d
 
     spike_posture_list.append(spike_posture)
+
+indices_up = np.where(parameters.posture['w'][0, :] > 0)
+indices_down = np.where(parameters.posture['w'][1, :] > 0)
+
+neuron_indices_up, legs_up = get_indexes_legs(indices_up[0])
+neuron_indices_down, legs_down = get_indexes_legs(indices_down[0])
+
+#print(np.bincount(neuron_indices_up), np.bincount(legs_up))
+
+#print(np.bincount(neuron_indices_down), np.bincount(legs_down))
+
+perm, synapse_type, _, _, _, _, _ = get_encoding()
+
+print(np.bincount(np.array(synapse_type)))
+print(np.bincount(np.array(synapse_type)[neuron_indices_up]))
+print(100*np.bincount(np.array(synapse_type)[neuron_indices_up])/np.bincount(np.array(synapse_type)))
+
+'''
+print('neurons up')
+for i in range(neuron_indices_up.size):
+    print(neuron_indices_up[i], legs_up[i], perm[neuron_indices_up[i]])
+
+print('neurons down')
+for i in range(neuron_indices_down.size):
+    print(neuron_indices_down[i], legs_down[i], perm[neuron_indices_down[i]])
+'''
 
 accuracy_list[accuracy_list == np.nan] = 0
 min_index = np.where(np.ndarray.flatten(accuracy_list) == np.min(accuracy_list))
