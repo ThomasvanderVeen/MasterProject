@@ -11,8 +11,8 @@ N_PLOT = 2
 N_SKIP = 100
 
 parameters = Parameters(t_total=25, dt=0.001)
-w_1_list = np.linspace(1E-3, 7.5E-3, num=1)
-w_2_list = np.linspace(0.1E-3, 0.6E-3, num=1)
+w_1_list = np.linspace(0.1E-3, 10E-3, num=10)
+w_2_list = np.linspace(0.1E-3, 5E-3, num=6)
 
 data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
@@ -40,7 +40,7 @@ for l, m in itertools.product(range(w_2_list.size), range(w_1_list.size)):
         if ratio > 1.3:
             weights[j, 0] = w_1_list[m]
 
-        if ratio < 1/1.3:
+        if ratio < 1/1.7:
             weights[j, 1] = w_2_list[l]
 
     parameters.posture['w'] = weights.T
@@ -58,9 +58,32 @@ for l, m in itertools.product(range(w_2_list.size), range(w_1_list.size)):
         firing_rate = firing_rate_1 - firing_rate_2
         error = np.mean(np.abs(np.convolve(zscore.zscore(firing_rate), np.ones(3000)/3000, mode='same') - zscore.zscore(pitch[:, j+N_SIMULATIONS])))
 
-        d, cost_matrix, acc_cost_matrix, path = dtw(zscore.zscore(firing_rate)[::N_SKIP], zscore.zscore(pitch[:, j+N_SIMULATIONS])[::N_SKIP],
-                                                                dist=euclidean_norm)
-        accuracy_list[l, m] += d
+        d, _, _, _ = dtw(zscore.zscore(firing_rate)[::N_SKIP], zscore.zscore(pitch[:, j+N_SIMULATIONS])[::N_SKIP],
+                         dist=euclidean_norm)
+        accuracy_list[l, m] += d/N_SIMULATIONS_TEST
+        '''
+        print(d)
+
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.1, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+                         dist=euclidean_norm)
+        print(d, 0.1)
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.2, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+                         dist=euclidean_norm)
+        print(d, 0.2)
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.3, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+                         dist=euclidean_norm)
+        print(d, 0.3)
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.45, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+                         dist=euclidean_norm)
+        print(d, 0.45)
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 1, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+                         dist=euclidean_norm)
+        print(d, 1)
+        '''
+
+        #plt.plot(time[::N_SKIP], zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 1, size=pitch[:, j + N_SIMULATIONS][::N_SKIP].shape))
+        #plt.plot(time[::N_SKIP], zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP])
+        #plt.show()
 
     spike_posture_list.append(spike_posture)
 
@@ -70,15 +93,14 @@ indices_down = np.where(parameters.posture['w'][1, :] > 0)
 neuron_indices_up, legs_up = get_indexes_legs(indices_up[0])
 neuron_indices_down, legs_down = get_indexes_legs(indices_down[0])
 
-#print(np.bincount(neuron_indices_up), np.bincount(legs_up))
-
-#print(np.bincount(neuron_indices_down), np.bincount(legs_down))
-
 perm, synapse_type, _, _, _, _, _ = get_encoding()
 
-print(np.bincount(np.array(synapse_type)))
-print(np.bincount(np.array(synapse_type)[neuron_indices_up]))
-print(100*np.bincount(np.array(synapse_type)[neuron_indices_up])/np.bincount(np.array(synapse_type)))
+print(np.bincount(neuron_indices_up), np.bincount(legs_up))
+print(np.bincount(neuron_indices_down), np.bincount(legs_down))
+
+print(np.around(100*np.bincount(np.array(synapse_type)[neuron_indices_up])/np.bincount(np.array(synapse_type)), 3))
+print(np.around(100*np.bincount(np.array(synapse_type)[neuron_indices_down])/np.bincount(np.array(synapse_type)), 3))
+
 
 '''
 print('neurons up')

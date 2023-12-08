@@ -193,14 +193,15 @@ def plot_primitive_weights(ax, fig, tau_list, w_1, w_2):
 
 
 def plot_climbing_accuracy(fig, ax, name):
-    ax.set_ylabel('DTW error')
     ax.plot()
     ax.legend()
     fig.tight_layout(pad=0.5)
     if name == 'climbing':
-        fig.savefig('Images/climbing_accuracy.png', bbox_inches='tight')
+        ax.set_ylabel('Balanced Accuracy')
         ax.set_xlabel('w_exc (mV)')
+        fig.savefig('Images/climbing_accuracy.png', bbox_inches='tight')
     elif name == 'pitch':
+        ax.set_ylabel('DTW score')
         ax.set_xlabel('w_up (mV)')
         fig.savefig('Images/pitch_accuracy.png', bbox_inches='tight')
 

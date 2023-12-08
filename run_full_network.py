@@ -9,12 +9,13 @@ from functions import *
 
 
 N_LEGS = 6
-N_SIMULATIONS = 11
+N_SIMULATIONS = 70
 W_POS = [11.43e-3, 0, 11.43e-3, 11.43e-3, 14e-3, 8e-3, 0e-3]
 W_VEL = [0e-3, 17.4e-3, 14e-3, 2.5e-3, 5.71e-3, 0e-3, 14e-3]
 
 permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, base_perm = \
     get_encoding(W_POS, W_VEL, N_LEGS)
+
 data = pickle_open('Data/simulation_data')
 
 joint_angles_list, primitive_list, position_list, velocity_list, sensory_list = [], [], [], [], []
@@ -27,7 +28,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
         n_hairs=200,
-        t_total=25,
+        t_total=5,
         dt=0.001,
         n_angles=18
     )
@@ -79,12 +80,13 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     velocity_list.append(spike_velocity.numpy())
     sensory_list.append(spike_sensory.numpy())
 
-#pickle_save(joint_angles_list, 'Data/joint_angles_list')
-#pickle_save(sensory_list, 'Data/sensory_list')
-#pickle_save(position_list, 'Data/position_list')
-#pickle_save(velocity_list, 'Data/velocity_list')
+'''
+pickle_save(joint_angles_list, 'Data/joint_angles_list')
+pickle_save(sensory_list, 'Data/sensory_list')
+pickle_save(position_list, 'Data/position_list')
+pickle_save(velocity_list, 'Data/velocity_list')
 pickle_save(primitive_list, 'Data/primitive_list')
-
+'''
 '''
 Position neuron testing
 '''
@@ -319,16 +321,16 @@ for i in range(parameters.primitive['n']):
     if i % permutations_name.shape[0] == 0:
         ax.plot([i, i], [0, 1], color='black', linestyle='dotted')
 ax.plot([parameters.primitive['n'], parameters.primitive['n']], [0, 1], color='black', linestyle='dotted')
-ax.plot([0, parameters.primitive['n']], [0.95, 0.95], color='red', linestyle='dotted')
+ax.plot([0, parameters.primitive['n']], [0.9, 0.9], color='red', linestyle='dotted')
 ax.plot([0, parameters.primitive['n']], [0.1, 0.1], color='red', linestyle='dotted')
 
 plots.plot_swing_stance(ax, fig, x, legs)
 
-indexes_swing = np.where(swing > 0.95)
+indexes_swing = np.where(swing > 0.9)
 indexes_stance = np.where(swing < 0.1)
 
-indexes_swing, leg_swing = get_indexes_legs(indexes_swing)
-indexes_stance, leg_stance = get_indexes_legs(indexes_stance)
+indexes_swing, leg_swing = get_indexes_legs(indexes_swing[0])
+indexes_stance, leg_stance = get_indexes_legs(indexes_stance[0])
 
 
 print('swing')
