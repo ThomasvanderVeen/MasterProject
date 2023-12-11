@@ -9,9 +9,9 @@ from functions import *
 
 
 N_LEGS = 6
-N_SIMULATIONS = 70
+N_SIMULATIONS = 5
 W_POS = [11.43e-3, 0, 11.43e-3, 11.43e-3, 14e-3, 8e-3, 0e-3]
-W_VEL = [0e-3, 17.4e-3, 14e-3, 2.5e-3, 5.71e-3, 0e-3, 14e-3]
+W_VEL = [0e-3, 17.4e-3, 14e-3, 2.5e-3, 5.71e-3, 0e-3, 9e-3]
 
 permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, base_perm = \
     get_encoding(W_POS, W_VEL, N_LEGS)
@@ -80,7 +80,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     velocity_list.append(spike_velocity.numpy())
     sensory_list.append(spike_sensory.numpy())
 
-'''
+''''
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
 pickle_save(sensory_list, 'Data/sensory_list')
 pickle_save(position_list, 'Data/position_list')
@@ -306,6 +306,9 @@ for m in tqdm(range(6), desc='PSTH plot progress'):
 
         plots.plot_psth(ax, fig, i, m, position_angles[i], 'velocity')
 
+pickle_save(swing, 'Data/swing')
+pickle_save(stance, 'Data/stance')
+
 n_primitive = permutations_name.shape[0]
 n_primitive_2 = n_primitive//2
 
@@ -317,7 +320,7 @@ plt.close('all')
 fig, ax = plt.subplots()
 
 for i in range(parameters.primitive['n']):
-    ax.scatter(i, swing[i], color=parameters.general['colors'][int(base_perm[i % base_perm.shape[0], 0])], s=8)
+    ax.scatter(i, swing[i], color=parameters.general['colors'][int(base_perm[i % base_perm.shape[0], 2])], s=8)
     if i % permutations_name.shape[0] == 0:
         ax.plot([i, i], [0, 1], color='black', linestyle='dotted')
 ax.plot([parameters.primitive['n'], parameters.primitive['n']], [0, 1], color='black', linestyle='dotted')
@@ -340,4 +343,7 @@ for i in range(len(leg_swing)):
 print('stance')
 for i in range(len(leg_stance)):
     print(indexes_stance[i], leg_stance[i], legs[leg_stance[i]], permutations_name[indexes_stance[i]])
+
+
+fig, ax = plt.subplots()
 

@@ -12,19 +12,18 @@ ground_truth_list = pickle_open('Data/ground_truth')
 
 parameters = Parameters(t_total=5, dt=0.001)
 N_SIMULATIONS = len(velocity_list)
-N_SIMULATIONS = 1
+N_SIMULATIONS = 20
 N_LEGS = 6
 N_WEIGHTS = 7
 
 tau_list = np.linspace(0e-3, 10e-3, num=5)
-N_W = 8
-w_1 = np.linspace(0e-3, 20e-3, num=N_W)
-w_2 = np.linspace(0e-3, 20e-3, num=N_W)
+w_1 = np.linspace(6e-3, 15e-3, num=N_WEIGHTS)
+w_2 = np.linspace(6e-3, 15e-3, num=N_WEIGHTS)
 w_1_opt, w_2_opt, accuracy_opt = \
     np.zeros([tau_list.size, N_WEIGHTS]), np.zeros([tau_list.size, N_WEIGHTS]), np.zeros([tau_list.size, N_WEIGHTS])
-accuracy_matrix = np.zeros((N_W, N_W, N_WEIGHTS))
+accuracy_matrix = np.zeros((N_WEIGHTS, N_WEIGHTS, N_WEIGHTS))
 
-for p, l, m in itertools.product(range(tau_list.size), range(N_W), range(N_W)):
+for p, l, m in itertools.product(range(tau_list.size), range(N_WEIGHTS), range(N_WEIGHTS)):
     w_pos = [w_1[l]] * N_WEIGHTS
     w_vel = [w_2[m]] * N_WEIGHTS
     permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, _ = get_encoding(
