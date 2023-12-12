@@ -1,6 +1,8 @@
-from matplotlib.lines import Line2D
-import seaborn as sns
 import matplotlib.pylab as pylab
+import seaborn as sns
+from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
+
 from functions import *
 
 create_directory('Images')

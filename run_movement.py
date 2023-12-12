@@ -1,17 +1,17 @@
-from dictionaries import Parameters
-from class_velocity_neuron import LIF_simple
 from class_hair_field import HairField
 from class_sensory_neuron import AdEx
-from plots import *
+from class_velocity_neuron import LIF_simple
+from dictionaries import Parameters
 from functions import *
+from plots import *
 
 N_speeds = 19
 parameters = Parameters(max_joint_angle=180, min_joint_angle=0, n_hairs=10, t_total=10, dt=0.001, n_angles=1)
 
 speeds = np.linspace(10, 190, num=N_speeds)
-ramp = (90/(speeds*parameters.general['dt'])).astype(int)
+ramp = (90 / (speeds * parameters.general['dt'])).astype(int)
 
-parameters.sensory['n'] = int(parameters.sensory['n']/2)
+parameters.sensory['n'] = int(parameters.sensory['n'] / 2)
 parameters.velocity['n'] = 1
 
 spikes_rates = []
@@ -27,11 +27,12 @@ for j in tqdm(range(N_speeds)):
                                        range(len(neurons))]
 
     t1 = torch.linspace(90, 180, steps=ramp[j])
-    t2 = torch.linspace(180, 180, steps=parameters.general['N_steps']-ramp[j])
+    t2 = torch.linspace(180, 180, steps=parameters.general['N_steps'] - ramp[j])
     ramp_angles = torch.cat((t1, t2))
-    hair_angles = hair_field.get_hair_angle(torch.Tensor.numpy(ramp_angles))/37e9
+    hair_angles = hair_field.get_hair_angle(torch.Tensor.numpy(ramp_angles)) / 37e9
 
-    time, spike_list, spike_inter = np.array([]), torch.empty(hair_angles.shape), np.empty([parameters.general['N_steps']])
+    time, spike_list, spike_inter = np.array([]), torch.empty(hair_angles.shape), np.empty(
+        [parameters.general['N_steps']])
 
     for i in range(parameters.general['N_steps']):
         _, spike_list[i, :] = sensory_neuron.forward(hair_angles[i, :])

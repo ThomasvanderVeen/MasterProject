@@ -1,6 +1,7 @@
+from collections import namedtuple
+
 import torch
 import torch.nn as nn
-from collections import namedtuple
 
 
 class SurrGradSpike(torch.autograd.Function):
@@ -76,13 +77,13 @@ class LIF(nn.Module):
         count_refr = self.state.count_refr
         I = self.state.I
 
-        w += input*self.b
+        w += input * self.b
         V += self.dt * (torch.sum(I, dim=1) - V + self.V_R) / self.tau
-        I += self.dt*(w-I)/self.tau_epsp
-        w += -self.dt*w/self.tau_W
+        I += self.dt * (w - I) / self.tau_epsp
+        w += -self.dt * w / self.tau_W
 
         spk = activation(V - self.V_T)
-        count_refr = self.refr*spk + (1-spk)*(count_refr-1)
+        count_refr = self.refr * spk + (1 - spk) * (count_refr - 1)
         V = (1 - spk) * V * (count_refr <= 0) + spk * self.V_R + (1 - spk) * self.V_R * (count_refr > 0)
 
         self.state = self.NeuronState(V=V, w=w, count_refr=count_refr, spk=spk, I=I)

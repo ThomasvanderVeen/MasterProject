@@ -1,17 +1,18 @@
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import SGDRegressor as SGD
-from sklearn.preprocessing import StandardScaler
-from functions import *
-import numpy as np
-from dictionaries import Parameters
 import matplotlib
+import numpy as np
+from sklearn.linear_model import SGDRegressor as SGD
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+from dictionaries import Parameters
+from functions import *
 
 primitive_list = pickle_open('Data/primitive_list')
 data = pickle_open('Data/simulation_data')
 N_simulations = len(primitive_list)
 parameters = Parameters(t_total=5, dt=0.0001)
 tau = np.array([100e-3, 250e-3, 500e-3, 750e-3, 1000e-3, 1500e-3, 2000e-3, 2500e-3, 3000e-3])
-#tau = np.array([2000e-3])
+# tau = np.array([2000e-3])
 
 interneuron_list, test, train = [], [], []
 for t in tqdm(tau):
@@ -30,9 +31,9 @@ for t in tqdm(tau):
         primitive_list[i] = convert_to_bins(primitive_list[i], parameters.general['N_frames']).astype(float)
         interneuron_list[i] = convert_to_bins(interneuron_list[i], parameters.general['N_frames']).astype(float)
         for j in range(360):
-            primitive_list[i][:, j] = low_pass_filter(primitive_list[i][:, j], 1/200, tau=t)
+            primitive_list[i][:, j] = low_pass_filter(primitive_list[i][:, j], 1 / 200, tau=t)
         for j in range(position_list[0].shape[1]):
-            interneuron_list[i][:, j] = low_pass_filter(interneuron_list[i][:, j], 1/200, tau=t)
+            interneuron_list[i][:, j] = low_pass_filter(interneuron_list[i][:, j], 1 / 200, tau=t)
 
     model = SGD(alpha=0.000, max_iter=10000, verbose=100)
 
@@ -62,19 +63,19 @@ for t in tqdm(tau):
 matplotlib.rc('xtick', labelsize=10)
 matplotlib.rc('ytick', labelsize=10)
 
-fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
+fig, ax = plt.subplots(figsize=(1.5 * 3.54, 3.54), dpi=600)
 
-ax.plot(tau*1000, train, color='blue')
-ax.plot(tau*1000, test, color='red')
-ax.scatter(tau*1000, train, color='blue')
-ax.scatter(tau*1000, test, color='red')
+ax.plot(tau * 1000, train, color='blue')
+ax.plot(tau * 1000, test, color='red')
+ax.scatter(tau * 1000, train, color='blue')
+ax.scatter(tau * 1000, test, color='red')
 ax.set_xlabel('tau (ms)', fontsize=15)
 ax.set_ylabel('accuracy', fontsize=15)
 ax.legend(['train', 'test'])
 
 fig.savefig('Images/regression_tau', bbox_inches='tight')
 
-fig, ax = plt.subplots(figsize=(1.5*3.54, 3.54), dpi=600)
+fig, ax = plt.subplots(figsize=(1.5 * 3.54, 3.54), dpi=600)
 
 plt.plot(range(y_predicted_test.size), y_predicted_test, color='blue')
 plt.plot(range(y_predicted_test.size), y_test, color='red')
@@ -83,5 +84,3 @@ ax.set_ylabel('Body Pitch', fontsize=15)
 ax.legend(['prediction', 'ground truth'])
 
 fig.savefig('Images/regression_test', bbox_inches='tight')
-
-

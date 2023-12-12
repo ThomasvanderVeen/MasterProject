@@ -43,9 +43,9 @@ def get_firing_rate(spike_train, dt):
 
 
 def get_firing_rate_2(spike_train, dt, t=0.5, sigma=3, nan_bool=True):
-    n = int(t/dt)
+    n = int(t / dt)
 
-    firing_rate = np.convolve(spike_train.astype(int), np.ones(n), mode='same')/t
+    firing_rate = np.convolve(spike_train.astype(int), np.ones(n), mode='same') / t
     firing_rate = gaussian_filter1d(firing_rate, sigma=sigma)
 
     if nan_bool:
@@ -99,7 +99,7 @@ def get_encoding(w_pos=[0, 0, 0, 0, 0, 0, 0], w_vel=[0, 0, 0, 0, 0, 0, 0], n=6):
                                 (1 if (permutation == 'Vel+').sum() + (permutation == 'Vel-').sum() == 2
                                  else
                                  (2 if (permutation == 'Pos+').sum() + (permutation == 'Pos-').sum() == 1
-                                  and (permutation == 'Vel+').sum() + (permutation == 'Vel-').sum() == 1
+                                       and (permutation == 'Vel+').sum() + (permutation == 'Vel-').sum() == 1
                                   else -1)))
         else:
             synapse_type.append(3 if (permutation == 'Pos+').sum() + (permutation == 'Pos-').sum() == 2
@@ -128,19 +128,19 @@ def get_encoding(w_pos=[0, 0, 0, 0, 0, 0, 0], w_vel=[0, 0, 0, 0, 0, 0, 0], n=6):
     positive_mask = 1 - negative_mask
 
     weights = np.tile(weights, (6, 1))
-    synapse_type = synapse_type*6
+    synapse_type = synapse_type * 6
 
     extra = np.array([0, 4, 8])
     extra = np.tile(extra, (base_perm.shape[0], 1))
     final_perm = (base_perm + extra).clip(min=0)
 
-    extra_2 = np.linspace(0, 12 * (n - 1), num=n).repeat(3*final_perm.shape[0])
+    extra_2 = np.linspace(0, 12 * (n - 1), num=n).repeat(3 * final_perm.shape[0])
     final_perm = (np.tile(final_perm.flatten(), n) + extra_2).astype(int)
 
-    base_perm = base_perm+1
+    base_perm = base_perm + 1
     base_perm[base_perm == -np.inf] = 0
 
-    return perm, synapse_type, weights, negative_mask, positive_mask, final_perm, base_perm
+    return perm, synapse_type, weights, negative_mask, positive_mask, final_perm, base_perm.astype(int)
 
 
 def convert_to_bins(old_array, n_bins, sum_bool=False):
@@ -168,9 +168,9 @@ def get_stance_swing_bins(gait, spike_train):
     stance_bin_likelihood = np.zeros((n_phases, 15))
 
     for i in range(n_phases):
-        start_idx = change_index[2*i + (1 if gait[0] == 0 else 0)]
-        end_idx_swing = change_index[1 + 2*i + (1 if gait[0] == 0 else 0)]
-        end_idx_stance = change_index[2 + 2*i + (1 if gait[0] == 0 else 0)]
+        start_idx = change_index[2 * i + (1 if gait[0] == 0 else 0)]
+        end_idx_swing = change_index[1 + 2 * i + (1 if gait[0] == 0 else 0)]
+        end_idx_stance = change_index[2 + 2 * i + (1 if gait[0] == 0 else 0)]
 
         spikes_swing = np.array_split(spike_train[start_idx:end_idx_swing], 15)
         spikes_stance = np.array_split(spike_train[end_idx_swing:end_idx_stance], 15)
@@ -193,10 +193,10 @@ def get_stance_swing_bins(gait, spike_train):
 def prepare_spikes_primitive(spike_velocity, spike_position, permutations, mask):
     toepel = ()
     for i in range(18):
-        toepel += (spike_velocity[[0 + 2*i, 1 + 2*i]], spike_position[[0 + 2*i, 1 + 2*i]])
+        toepel += (spike_velocity[[0 + 2 * i, 1 + 2 * i]], spike_position[[0 + 2 * i, 1 + 2 * i]])
 
     pos_vel_spikes = torch.concat(toepel)
-    pos_vel_spikes = pos_vel_spikes[permutations].reshape(mask.shape)*mask
+    pos_vel_spikes = pos_vel_spikes[permutations].reshape(mask.shape) * mask
 
     return pos_vel_spikes
 

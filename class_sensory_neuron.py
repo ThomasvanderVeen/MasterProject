@@ -1,6 +1,7 @@
+from collections import namedtuple
+
 import torch
 import torch.nn as nn
-from collections import namedtuple
 
 
 class SurrGradSpike(torch.autograd.Function):
@@ -77,10 +78,11 @@ class AdEx(nn.Module):
         I = input
         count_refr = self.state.count_refr
 
-        V += (self.g_L*(self.E_L - V) + self.g_L*self.DeltaT*torch.exp((V-self.V_T)/self.DeltaT) - w + I)*self.dt/self.C
+        V += (self.g_L * (self.E_L - V) + self.g_L * self.DeltaT * torch.exp(
+            (V - self.V_T) / self.DeltaT) - w + I) * self.dt / self.C
 
         spk = activation(V - self.V_cut)
-        count_refr = self.refr*spk + (1-spk)*(count_refr-1)
+        count_refr = self.refr * spk + (1 - spk) * (count_refr - 1)
         V = (1 - spk) * V * (count_refr <= 0) + spk * self.V_R + (1 - spk) * self.V_R * (count_refr > 0)
         w += spk * self.b
         w += (self.a * (V - self.E_L) - w) * self.dt / self.tau_W

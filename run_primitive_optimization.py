@@ -1,9 +1,8 @@
-from functions import *
+from tqdm.contrib import itertools
+
 from class_primitive_neuron import LIF_primitive
 from dictionaries import Parameters
 from plots import *
-import time
-from tqdm.contrib import itertools
 
 joint_angles_list = pickle_open('Data/joint_angles_list')
 velocity_list = pickle_open('Data/velocity_list')
@@ -79,11 +78,6 @@ for p, l, m in itertools.product(range(tau_list.size), range(N_WEIGHTS), range(N
         F1 = 2 * true_pos_sum[i] / (2 * true_pos_sum[i] + false_pos_sum[i] + false_neg_sum[i] + 0.0000001)
         MCC = np.sqrt(TPR * TNR * PPV * NPV) - np.sqrt(FNR * FPR * FOR * FDR)
         x = np.linspace(0, 1, num=ground_truth_bins[:, i].shape[0])
-
-        # print(synapse_type[i], ACC_balanced)
-        # plt.scatter(x, ground_truth_bins[:, i])
-        # plt.scatter(x, spike_primitive_bins[:, i] * 2)
-        # plt.show()
 
         accuracy_types[synapse_type[i]] += ACC_balanced / N_types[synapse_type[i]]
 
