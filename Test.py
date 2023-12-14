@@ -1,5 +1,5 @@
 from matplotlib.patches import Rectangle
-
+from scipy import stats
 from plots import *
 
 swing = pickle_open('Data/swing')
@@ -18,6 +18,26 @@ swings_average = np.mean(swings, axis=3)
 swings_max = np.max(swings, axis=3) - swings_average
 swings_min = swings_average - np.min(swings, axis=3)
 swings_std = np.std(swings, axis=3)
+
+
+t_scores, p_scores = np.zeros((6, 3, 2)), np.zeros((6, 3, 2))
+for LEG in range(6):
+    for JOINT in range(3):
+        t_scores[LEG, JOINT, 0], p_scores[LEG, JOINT, 0] = stats.ttest_ind(swings[JOINT, 0, LEG, :], swings[JOINT, 1, LEG, :])
+        t_scores[LEG, JOINT, 1], p_scores[LEG, JOINT, 1] = stats.ttest_ind(swings[JOINT, 2, LEG, :], swings[JOINT, 3, LEG, :])
+
+
+df = pd.DataFrame(data=np.around(t_scores[:, :, 0].T, 2), index=['alpha', 'beta', 'gamma'])
+df.columns = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
+df.to_csv("Images/t_scores_vel.csv")
+df = pd.DataFrame(data=np.around(t_scores[:, :, 1].T, 2), index=['alpha', 'beta', 'gamma'])
+df.columns = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
+df.to_csv("Images/t_scores_pos.csv")
+
+print(t_scores[:, :, 0])
+print(t_scores[:, :, 1])
+
+
 
 x = [0, 1, 2, 3, 6, 7, 8, 9, 12, 13, 14, 15]
 LEGS = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']

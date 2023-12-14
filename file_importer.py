@@ -10,8 +10,8 @@ SIMULATION_DATA_FILE = "simulation_data"
 DESKTOP_PATH = r"C:\DOCUMENTEN\RUG\Master\Master Research Project\Kinematic_Data"
 LAPTOP_PATH = r"C:\Users\thoma\Documents\RUG\Master Project\Kinematic_Data"
 LINUX_PATH = r"/home/s3488926/Documents/master_project/drive/Kinematic_Data"
-STEPS = '_00_'
-T_TOTAL = 5
+STEPS = '_48_'
+T_TOTAL = 25
 N_FRAMES = 200 * T_TOTAL
 LEGS = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']
 

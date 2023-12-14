@@ -10,7 +10,7 @@ from dictionaries import Parameters
 from functions import *
 
 N_LEGS = 6
-N_SIMULATIONS = 50
+N_SIMULATIONS = 11
 W_POS = [11.43e-3, 0, 11.43e-3, 11.43e-3, 14e-3, 8e-3, 0e-3]
 W_VEL = [0e-3, 17.4e-3, 14e-3, 2.5e-3, 5.71e-3, 0e-3, 14e-3]
 
@@ -29,7 +29,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
         n_hairs=200,
-        t_total=5,
+        t_total=25,
         dt=0.001,
         n_angles=18
     )
@@ -81,18 +81,23 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         _, spike_primitive[i, :] = primitive_neuron.forward(pos_vel_spikes)
 
     primitive_list.append(spike_primitive.numpy())
+
+    '''
     joint_angles_list.append(joint_angles)
     position_list.append(spike_position.numpy())
     velocity_list.append(spike_velocity.numpy())
     sensory_list.append(spike_sensory.numpy())
+    '''
 
 '''
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
 pickle_save(sensory_list, 'Data/sensory_list')
 pickle_save(position_list, 'Data/position_list')
 pickle_save(velocity_list, 'Data/velocity_list')
-pickle_save(primitive_list, 'Data/primitive_list')
 '''
+
+pickle_save(primitive_list, 'Data/primitive_list')
+
 '''
 Position neuron testing
 '''
@@ -101,7 +106,7 @@ fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
 
 for i in range(2):
-    firing_rate = get_firing_rate_2(spike_position[:, i].numpy(), parameters.general['dt'], t=0.05)
+    firing_rate = get_firing_rate_2(spike_position[:, i].numpy(), parameters.general['dt'], t=0.03)
     ax1.plot(time, firing_rate, color=parameters.general['colors'][i])
 
 ax2.plot(time, joint_angles[:, 0], color='black')
