@@ -10,15 +10,15 @@ N_SIMULATIONS = 9
 N_SIMULATIONS_TEST = 2
 N_PLOT = 2
 N_SKIP = 100
-N_LABELS = 5
 
+w_1_list = np.linspace(0.1E-3, 20E-3, num=2)
+ratios = np.linspace(1.7, 1.7, num=1)
 parameters = Parameters(t_total=25, dt=0.001)
-w_1_list = np.linspace(0.1E-3, 20E-3, num=6)
-ratios = np.linspace(1.3, 2.3, num=5)
+
 data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
 pitch, pitch_max, pitch_min, pitch_middle = get_pitch(data, N_SIMULATIONS + N_SIMULATIONS_TEST, parameters)
-accuracy_list = np.zeros((N_LABELS, w_1_list.size))
+accuracy_list = np.zeros((ratios.size, w_1_list.size))
 time = np.linspace(0, parameters.general['t_total'], num=parameters.general['N_steps'])
 spike_posture_list, spike_posture_binned_list = [], []
 euclidean_norm = lambda x, y: np.abs(x - y)
@@ -38,12 +38,12 @@ for l, m in itertools.product(range(ratios.size), range(w_1_list.size)):
             incidence_binned += np.histogram(incidence, bins=2, range=(pitch_min, pitch_max))[0]
 
         ratio = incidence_binned[1] / incidence_binned[0]
-        if 1 != synapse_type[j % 112] and 6 != synapse_type[j % 112]:
-            if ratio > ratios[l]:
-                weights[j, 0] = w_1_list[m]
 
-            if ratio < 1 / ratios[l]:
-                weights[j, 1] = w_1_list[m]
+        if ratio > ratios[l]:
+            weights[j, 0] = w_1_list[m]
+
+        if ratio < 1 / ratios[l]:
+            weights[j, 1] = w_1_list[m]
 
     parameters.posture['w'] = weights.T
     posture_neuron = define_and_initialize(LIF_primitive, parameters.posture)
@@ -67,6 +67,7 @@ for l, m in itertools.product(range(ratios.size), range(w_1_list.size)):
         d, _, _, _ = dtw(zscore.zscore(firing_rate)[::N_SKIP], zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
                          dist=euclidean_norm)
         accuracy_list[l, m] += d / N_SIMULATIONS_TEST
+
         '''
         print(d)
 
@@ -99,6 +100,11 @@ indices_down = np.where(parameters.posture['w'][1, :] > 0)
 neuron_indices_up, legs_up = get_indexes_legs(indices_up[0])
 neuron_indices_down, legs_down = get_indexes_legs(indices_down[0])
 
+print(perm[neuron_indices_up])
+
+print(np.bincount(legs_up))
+print(np.bincount(legs_down))
+
 #print(np.around(100 * np.bincount(np.array(synapse_type)[neuron_indices_up]) / np.bincount(np.array(synapse_type)), 3))
 #print(
 #    np.around(100 * np.bincount(np.array(synapse_type)[neuron_indices_down]) / np.bincount(np.array(synapse_type)), 3))
@@ -115,7 +121,9 @@ for i in range(neuron_indices_down.size):
 
 accuracy_list[accuracy_list == np.nan] = 0
 min_index = np.where(np.ndarray.flatten(accuracy_list) == np.min(accuracy_list))
+
 spike_posture = spike_posture_list[min_index[0][0]]
+
 
 fig, ax = plt.subplots()
 for i in range(N_PLOT):
@@ -133,7 +141,7 @@ plots.plot_pitch_estimation(ax, fig)
 
 fig, ax = plt.subplots()
 
-for i in range(N_LABELS):
+for i in range(ratios.size):
     # ax.scatter(w_1_list * 1000, accuracy_list[i, :], color=parameters.general['colors'][i], s=13)
     ax.plot(w_1_list * 1000, accuracy_list[i, :], '-o', label=ratios[i],
             color=parameters.general['colors'][i])
