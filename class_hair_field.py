@@ -13,7 +13,7 @@ class HairField:
         self.overlap_bi = parameters['overlap_bi']
         self.receptive_field = None
 
-    def get_receptive_field(self):
+    def get_receptive_field_2(self):
         rf = (self.max_joint_angle - self.min_joint_angle + (self.N_hairs + 2) * self.overlap) / self.N_hairs
 
         receptive_min = np.linspace(self.min_joint_angle + rf - 2 * self.overlap, self.max_joint_angle - 2 * rf + 2 *
@@ -28,15 +28,25 @@ class HairField:
 
         self.receptive_field = np.stack((receptive_min, receptive_max))
 
+    def get_receptive_field(self):
+        rf = (self.max_joint_angle - self.min_joint_angle) / self.N_hairs
+        rf = (1-self.overlap/(self.max_joint_angle - self.min_joint_angle))*rf
+
+        receptive_min = np.linspace(self.min_joint_angle, self.min_joint_angle + rf*(self.N_hairs - 1),
+                                    num=self.N_hairs)
+
+        receptive_max = np.linspace(self.max_joint_angle - rf*(self.N_hairs - 1), self.max_joint_angle,
+                                    num=self.N_hairs)
+
+        self.receptive_field = np.stack((receptive_min, receptive_max))
+
     def get_double_receptive_field(self):
         self.get_receptive_field()
-        rf1 = self.receptive_field.copy()
 
-        self.max_joint_angle, self.min_joint_angle = self.min_joint_angle, self.max_joint_angle
-        self.get_receptive_field()
 
-        self.get_receptive_field()
-        self.receptive_field = np.hstack((self.receptive_field, rf1))
+        rf1 = -self.receptive_field.copy() + self.max_joint_angle + self.min_joint_angle
+
+        self.receptive_field = np.hstack((rf1, self.receptive_field))
         self.N_hairs = 2 * self.N_hairs
 
     def get_hair_angle(self, x):
@@ -55,32 +65,39 @@ class HairField:
 
 
 '''
-parameters_hair_field = {'N_hairs': 7, 'min_joint_angle': 0, 'max_joint_angle': 180, 'max_angle': 90, 'overlap': 4,
-                         'overlap_bi': 18}
+
+parameters_hair_field = {'N_hairs': 10, 'min_joint_angle': 0, 'max_joint_angle': 180, 'max_angle': 90, 'overlap': 3,
+                         'overlap_bi': 0}
 
 joint_angle = np.linspace(parameters_hair_field['min_joint_angle'], parameters_hair_field['max_joint_angle'], num=1200)
 hair_field = HairField(parameters_hair_field)
 hair_field.get_receptive_field()
 hair_angles = hair_field.get_hair_angle(joint_angle)
 
-plt.plot(joint_angle, hair_angles.numpy(), color='blue')
+plt.plot(joint_angle, hair_angles, color=colors[0])
 for i in range(hair_field.N_hairs - 1):
-    plt.fill_between([hair_field.receptive_field[0, 1+i], hair_field.receptive_field[1, i]], [90, 90], color='grey',
+    plt.fill_between([hair_field.receptive_field[0, 1+i], hair_field.receptive_field[1, i]], [90, 90], color=colors[0],
                      alpha=0.35)
 
 plot_hair_field(plt.gca(), 'uni')
 
-hair_field.get_binary_receptive_field()
+hair_field.get_double_receptive_field()
 hair_angles = hair_field.get_hair_angle(joint_angle)
 
-plt.plot(joint_angle, hair_angles[:, :int(hair_field.N_hairs/2)].numpy(), color='red')
-plt.plot(joint_angle, hair_angles[:, int(hair_field.N_hairs/2):].numpy(), color='blue')
+n_2 = int(hair_field.N_hairs/2)
+n_4 = int(n_2/2)
 
-for i in range(int(hair_field.N_hairs/2) - 1):
-    plt.fill_between([hair_field.receptive_field[0, i], hair_field.receptive_field[1, i+1]], [90, 90], color='red',
+plt.plot(joint_angle, hair_angles[:, n_4:n_2], color=colors[0])
+plt.plot(joint_angle, hair_angles[:, n_2+n_4:], color=colors[1], linestyle = '--')
+
+
+for i in range(n_4 - 1):
+    plt.fill_between([hair_field.receptive_field[0,  n_4 + i + 1], hair_field.receptive_field[1, n_4 + i]], [90, 90], color=colors[0],
                      alpha=0.25)
-    plt.fill_between([hair_field.receptive_field[0, int(hair_field.N_hairs/2) + 1+i],
-                      hair_field.receptive_field[1, int(hair_field.N_hairs/2) + i]], [90, 90], color='blue', alpha=0.25)
+    plt.fill_between([hair_field.receptive_field[0, n_2 + n_4 + i + 1], hair_field.receptive_field[1, n_2 + n_4 + i]], [90, 90],
+                 color=colors[1],
+                 alpha=0.25,)
 
 plot_hair_field(plt.gca(), 'bi')
+
 '''

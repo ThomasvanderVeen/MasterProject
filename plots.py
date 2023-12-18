@@ -17,24 +17,28 @@ params = {'legend.fontsize': 10,
           'ytick.labelsize': 10}
 pylab.rcParams.update(params)
 
-colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#ffff33', '#a65628']
+colors = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#FFDB58', '#a65628']
+markers = ['o', "^", "v", "*", "+", "x", "s", "p"]
 
 
 def plot_single_hair(ax, v):
+    #plt.style.use('classic')
     fig = plt.figure(1)
-    ax.set_xlabel("Time [s]")
-    ax.set_ylabel("firing rate [imp/s]")
+    ax.set_xlabel("Time (s)]")
+    ax.set_ylabel("Firing frequency (Hz)")
+    ax.grid(axis='y')
+    ax.minorticks_on()
 
     for i in range(len(ax.get_lines())):
         ax.get_lines()[i].set_color(colors[i])
 
     if isinstance(v, int):
-        ax.legend(['15°', '23°', '34°', '46°', '60°'])
+        ax.legend(['θ = 15°', 'θ = 23°', 'θ = 34°', 'θ = 46°', 'θ = 60°'], fancybox=False, edgecolor='black')
         ax.set_yticks([0, 40, 80, 120, 160, 200, 240, 280])
         fig.tight_layout(pad=0.5)
         fig.savefig('Images/angle.png')
     else:
-        ax.legend(['24 °/s', '47 °/s', '88 °/s', '151 °/s', '245 °/s'])
+        ax.legend(['ω = 24 °/s', 'ω = 47 °/s', 'ω = 88 °/s', 'ω = 151 °/s', 'ω = 245 °/s'], fancybox=False, edgecolor='black', loc='lower center')
         ax.set_yticks([0, 40, 80, 120, 160])
         fig.tight_layout(pad=0.5)
         fig.savefig('Images/angular_velocity.png')
@@ -46,7 +50,7 @@ def plot_single_hair(ax, v):
 
 def plot_heat_map(df):
     heatmap = sns.heatmap(data=df, annot=True, fmt='.3g', cbar_kws={'label': 'mean absolute error (MAE)'})
-    heatmap.set(xlabel='b', ylabel='V_r')
+    heatmap.set(xlabel='b (pV)', ylabel=r'$\tau_w$ (s)')
 
     plt.tight_layout(pad=0.5)
     plt.savefig('Images/heat_map.png')
@@ -54,8 +58,9 @@ def plot_heat_map(df):
 
 def plot_hair_field(ax, name):
     fig = plt.figure(1, figsize=(10, 6))
-    ax.set_xlabel("joint angle [degrees]")
-    ax.set_ylabel("hair angle [degrees]")
+    ax.set_xlabel("joint angle (degrees)")
+    ax.set_ylabel("hair angle (degrees)")
+    ax.minorticks_on()
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/hair_field_' + name + '.png')
@@ -65,15 +70,19 @@ def plot_hair_field(ax, name):
 
 
 def plot_position_interneuron(ax1, ax2, fig, name):
-    ax1.set_xlabel("time [s]")
-    ax1.set_ylabel("firing rate [imp/s]")
+    ax1.set_xlabel("Time (s)")
+    ax1.set_ylabel("Joint angle (degrees)")
+    ax1.minorticks_on()
+    ax2.minorticks_on()
 
     if name == 'uni':
-        ax1.legend(['Model Response', 'Exp. Data'], loc='lower right')
+        fig.legend(['Exp. data', 'Model'], loc='lower right', fancybox=False, edgecolor='black', bbox_to_anchor=[0.87, 0.15])
     else:
-        ax1.legend(['Dorsal Response', 'Ventral Response'], loc='lower right')
+        ax1.set_xlim([0, 3])
+        ax2.set_xlim([0, 3])
+        fig.legend(loc='lower right', fancybox=False, edgecolor='black', bbox_to_anchor=[0.87, 0.75])
 
-    ax2.set_ylabel("Joint Angle [°]")
+    ax2.set_ylabel("Firing frequency (Hz)")
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/position_interneuron_' + str(name) + '.png')
@@ -83,10 +92,12 @@ def plot_position_interneuron(ax1, ax2, fig, name):
 
 
 def plot_spike_timing(ax1, ax2, fig, n_index):
-    ax1.set_xlabel("time [s]")
+    ax1.set_xlabel("Time (s)")
     ax1.set_ylabel("Neuron index")
     ax1.set_yticks(np.arange(1, n_index + 1)[::10])
-    ax2.set_ylabel("Joint Angle [°]")
+    ax2.set_ylabel("Joint angle (degrees)")
+
+    ax2.minorticks_on()
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/spike_timing_.png')
@@ -96,8 +107,16 @@ def plot_spike_timing(ax1, ax2, fig, n_index):
 
 
 def plot_movement_interneuron(ax, fig):
-    ax.set_xlabel("Velocity (°/s)")
-    ax.set_ylabel("firing rate (imp/s)")
+    ax.set_xlabel(r"Angular velocity (degrees$\cdot$s$^{-1}$)")
+    ax.set_ylabel("Firing frequency (Hz)")
+
+    ax.set_ylim([0, 120])
+    ax.set_xlim([0, 200])
+
+    ax.legend(loc='upper left', fancybox=False, edgecolor='black')
+
+    ax.minorticks_on()
+    ax.grid(zorder=0)
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron.png')
@@ -108,9 +127,13 @@ def plot_movement_interneuron(ax, fig):
 
 def plot_movement_interneuron_network(ax, fig):
     ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Joint Angle (°)")
+    ax.set_ylabel("Joint angle (degrees)")
 
-    ax.legend(['Stimulus', 'Down', 'Up'], loc='lower right')
+    ax.grid(axis='y', zorder=0)
+
+    ax.minorticks_on()
+
+    ax.legend(['Exp. data', 'Dorsal direction', 'ventral direction'], loc='lower right', fancybox=False, edgecolor='black')
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron_network.png')
@@ -121,10 +144,13 @@ def plot_movement_interneuron_network(ax, fig):
 
 def plot_movement_binary(ax, ax1, fig):
     ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Joint Angle (degrees/s)")
-    ax1.set_ylabel("firing rate (imp/s)")
+    ax.set_ylabel("Joint angle (degrees)")
+    ax1.set_ylabel("Firing frequency (Hz)")
 
-    ax1.legend(['Down', 'Up'], loc='upper right')
+    ax.minorticks_on()
+    ax1.minorticks_on()
+
+    fig.legend(loc='upper right', fancybox=False, edgecolor='black', bbox_to_anchor=[0.87, 0.97])
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_binary.png')
@@ -132,14 +158,13 @@ def plot_movement_binary(ax, ax1, fig):
 
 
 def plot_primitive_roc(ax, fig):
-    labels = ['pos-pos', 'vel-vel', 'pos-vel', 'pos-pos-vel', 'vel-vel-pos', 'pos-pos-pos', 'vel-vel-vel']
+    ax.minorticks_on()
+    ax.set_xlabel("False positive rate")
+    ax.set_ylabel("True positive rate")
+    ax.legend(loc='lower right', fancybox=False, edgecolor='black')
 
-    legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
-                       for i in range(len(labels))]
-
-    ax.set_xlabel("False Positive Rate")
-    ax.set_ylabel("True Positive Rate")
-    ax.legend(handles=legend_elements, loc='lower right')
+    ax.set_xlim([-0.05, 1.05])
+    ax.set_ylim([-0.05, 1.05])
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_ROC.png')
@@ -153,6 +178,8 @@ def plot_psth(ax, fig, neuron, leg, permutations_name, label):
     fig.text(0.33, 0.04, 'Swing', ha='center')
     fig.text(0.66, 0.04, 'Stance')
     ax.set_xticks([])
+    ax.minorticks_on()
+
     fig.tight_layout(pad=0.5)
     if label == 'primitive':
         fig.savefig(f'Images_PSTH/prim_{permutations_name}_leg_{leg}_neuron_{neuron}')

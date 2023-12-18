@@ -4,7 +4,9 @@ class Parameters:
 
         self.general = {'dt': dt, 't_total': t_total, 'N_steps': int(t_total / dt), 'dt_camera': dt_camera,
                         'N_frames': int(t_total / dt_camera), 'n_angles': n_angles,
-                        'colors': ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#FFDB58', '#a65628']}
+                        'colors': ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#FFDB58', '#a65628'],
+                        'linestyles': ['-', '--', '-.', ':', '-', '--', ':', '-.'],
+                        'markers': ['o', "^", "v", "*", "+", "x", "s", "p"]}
 
         self.hair_field = {'N_hairs': n_hairs, 'min_joint_angle': min_joint_angle,
                            'max_joint_angle': max_joint_angle, 'max_angle': 90, 'overlap': 0, 'overlap_bi': 0}

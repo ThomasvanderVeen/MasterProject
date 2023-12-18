@@ -48,76 +48,75 @@ t_total = 10
 colors = ['green', 'yellow', 'blue', 'black', 'red']
 spike_rates, spike_rates_list = [], []
 times, times_list = [], []
-tau_list = np.linspace(400, 800, num=4, dtype=int) * 1E-3
-b_list = np.linspace(1, 22, num=4, dtype=int) * 1e-12
+tau_list = np.linspace(400, 800, num=8, dtype=int) * 1E-3
+b_list = np.linspace(1, 22, num=8, dtype=int) * 1e-12
 MSE = np.zeros((tau_list.size, b_list.size))
 
-for l in tqdm(range(tau_list.size)):
-    for m in range(b_list.size):
-        for [v, max_angle] in [[v_var, max_angle_stat], [v_stat, max_angle_var]]:
+for l, m in itertools.product(range(tau_list.size), range(b_list.size)):
+    for [v, max_angle] in [[v_var, max_angle_stat], [v_stat, max_angle_var]]:
 
-            N_steps = round(t_total / parameters.sensory['dt'])
-            N_ramp = np.around(max_angle / (v * parameters.sensory['dt'])).astype(int)
-            height = np.empty([parameters.sensory['n']])
-            height[:] = max_angle / 37e9
+        N_steps = round(t_total / parameters.sensory['dt'])
+        N_ramp = np.around(max_angle / (v * parameters.sensory['dt'])).astype(int)
+        height = np.empty([parameters.sensory['n']])
+        height[:] = max_angle / 37e9
 
-            parameters_ramp = {'n_ramp': N_ramp, 'n_steps': N_steps, 'height': height, 'low': np.full(height.shape, 0)}
-            ramp_generator = RampGenerator(parameters_ramp)
-            input_ramp = ramp_generator.ramp()
+        parameters_ramp = {'n_ramp': N_ramp, 'n_steps': N_steps, 'height': height, 'low': np.full(height.shape, 0)}
+        ramp_generator = RampGenerator(parameters_ramp)
+        input_ramp = ramp_generator.ramp()
 
-            parameters.sensory['tau_W'] = tau_list[l]
-            parameters.sensory['b'] = b_list[m]
+        parameters.sensory['tau_W'] = tau_list[l]
+        parameters.sensory['b'] = b_list[m]
 
-            adex = AdEx(parameters.sensory)
-            adex.initialize_state()
+        adex = AdEx(parameters.sensory)
+        adex.initialize_state()
 
-            voltage, time, spike_list = np.empty(input_ramp.numpy().shape), np.array([]), np.empty(
-                input_ramp.numpy().shape)
+        voltage, time, spike_list = np.empty(input_ramp.numpy().shape), np.array([]), np.empty(
+            input_ramp.numpy().shape)
 
-            for i in range(N_steps):
-                voltage[i, :], spike_list[i, :] = adex.forward(input_ramp[i])
-                time = np.append(time, i * parameters.sensory['dt'])
+        for i in range(N_steps):
+            voltage[i, :], spike_list[i, :] = adex.forward(input_ramp[i])
+            time = np.append(time, i * parameters.sensory['dt'])
 
-            for j in range(parameters.sensory['n']):
-                spikes = np.where(spike_list[:, j] == 1)
+        for j in range(parameters.sensory['n']):
+            spikes = np.where(spike_list[:, j] == 1)
 
-                ISI = np.diff(spikes)
+            ISI = np.diff(spikes)
 
-                t_spikes = np.append(0, time[spikes])
-                spike_rate = np.append(0, 1 / (ISI * parameters.sensory['dt']))
-                spike_rate = np.append(spike_rate, 0)
-                spike_rate = np.append(spike_rate, 0)
-                t_spikes = np.append(t_spikes, time[-1])
+            t_spikes = np.append(0, time[spikes])
+            spike_rate = np.append(0, 1 / (ISI * parameters.sensory['dt']))
+            spike_rate = np.append(spike_rate, 0)
+            spike_rate = np.append(spike_rate, 0)
+            t_spikes = np.append(t_spikes, time[-1])
 
-                spike_rate_max = np.max(spike_rate)
-                spike_rate_plateau = spike_rate[int(spike_rate.size / 2)]
+            spike_rate_max = np.max(spike_rate)
+            spike_rate_plateau = spike_rate[int(spike_rate.size / 2)]
 
-                index_t_1 = np.where(spike_rate == spike_rate_max)
-                index_t_2 = np.where(spike_rate == spike_rate_plateau)
-                t_1 = t_spikes[index_t_1[0][0]]
-                t_2 = t_spikes[index_t_2[0][5]]
+            index_t_1 = np.where(spike_rate == spike_rate_max)
+            index_t_2 = np.where(spike_rate == spike_rate_plateau)
+            t_1 = t_spikes[index_t_1[0][0]]
+            t_2 = t_spikes[index_t_2[0][5]]
 
-                tau_predict = get_tau(t_1, t_2, spike_rate_max, spike_rate_plateau)
+            tau_predict = get_tau(t_1, t_2, spike_rate_max, spike_rate_plateau)
 
-                if isinstance(v, int):
-                    tau_real = get_tau(0, 1.7, real_values[0, j], real_values[1, j])
+            if isinstance(v, int):
+                tau_real = get_tau(0, 1.7, real_values[0, j], real_values[1, j])
 
-                    MSE[l, m] += abs(real_values[0, j] - spike_rate_max)
-                    MSE[l, m] += abs(real_values[1, j] - spike_rate_plateau)
-                    MSE[l, m] += abs(tau_real - tau_predict)
-                else:
-                    tau_real = get_tau(real_values[4, j], 2.5, real_values[2, j], real_values[3, j])
+                MSE[l, m] += abs(real_values[0, j] - spike_rate_max)
+                MSE[l, m] += abs(real_values[1, j] - spike_rate_plateau)
+                MSE[l, m] += abs(tau_real - tau_predict)
+            else:
+                tau_real = get_tau(real_values[4, j], 2.5, real_values[2, j], real_values[3, j])
 
-                    MSE[l, m] += abs(real_values[2, j] - spike_rate_max)
-                    MSE[l, m] += abs(real_values[3, j] - spike_rate_plateau)
-                    MSE[l, m] += abs(tau_real - tau_predict)
+                MSE[l, m] += abs(real_values[2, j] - spike_rate_max)
+                MSE[l, m] += abs(real_values[3, j] - spike_rate_plateau)
+                MSE[l, m] += abs(tau_real - tau_predict)
 
-                spike_rates.append(spike_rate)
-                times.append(t_spikes)
+            spike_rates.append(spike_rate)
+            times.append(t_spikes)
 
-            spike_rates_list.append(spike_rates)
-            times_list.append(times)
-            spike_rates, times = [], []
+        spike_rates_list.append(spike_rates)
+        times_list.append(times)
+        spike_rates, times = [], []
 
 MSE = MSE / real_values.size
 MSE_flat = np.ndarray.flatten(MSE)
@@ -127,17 +126,17 @@ spike_rates = spike_rates_list[index_flat[0][0] * 2 + 1]
 times = times_list[index_flat[0][0] * 2 + 1]
 
 for i in range(len(spike_rates)):
-    plt.plot(times[i], spike_rates[i])
+    plt.plot(times[i], spike_rates[i], color=parameters.general['colors'][i], linestyle=parameters.general['linestyles'][i])
 plot_single_hair(plt.gca(), v_stat)
 
 spike_rates = spike_rates_list[index_flat[0][0] * 2]
 times = times_list[index_flat[0][0] * 2]
 
 for i in range(len(spike_rates)):
-    plt.plot(times[i], spike_rates[i])
+    plt.plot(times[i], spike_rates[i], color=parameters.general['colors'][i], linestyle=parameters.general['linestyles'][i])
 plot_single_hair(plt.gca(), v_var)
 
-df = pd.DataFrame(MSE.astype(int), columns=np.around(b_list, 15), index=np.around(tau_list, 5))
+df = pd.DataFrame(MSE.astype(int), columns=np.round(b_list*1E12), index=np.round(tau_list, 2))
 plot_heat_map(df)
 
 print(f'[Single hair] Optimum tau {tau_opt}, Optimum b: {b_opt}')

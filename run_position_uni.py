@@ -9,13 +9,14 @@ from plots import *
 
 data = pickle_open('Data/simulation_data')
 
-joint_angle = np.array(data[f'simulation_3'][0][0]).T
+joint_angle = np.array(data[f'simulation_0'][0][0]).T
 
 parameters = Parameters(max_joint_angle=np.max(joint_angle), min_joint_angle=np.min(joint_angle),
-                        n_hairs=20, t_total=7.5, dt=0.0001, n_angles=1)
+                        n_hairs=100, t_total=7.5, dt=0.0002, n_angles=1)
 
 joint_angle = joint_angle[:parameters.general['N_frames']]
 joint_angle = interpolate(joint_angle, parameters.general['t_total'], parameters.general['N_steps'])
+
 parameters.sensory['n'] = int(parameters.sensory['n'] / 2)
 parameters.position['N_input'] = int(parameters.hair_field['N_hairs'])
 parameters.position['n'] = 1
@@ -28,19 +29,19 @@ neurons = [AdEx, LIF]
 parameters_list = [parameters.sensory, parameters.position]
 sensory_neuron, position_neuron = [define_and_initialize(neurons[i], parameters_list[i]) for i in range(len(neurons))]
 
-time, spike_list, spike_inter = np.array([]), torch.empty(hair_angles.numpy().shape), np.empty(
+time, spike_sensory, spike_position = np.array([]), torch.empty(hair_angles.shape), np.empty(
     [parameters.general['N_steps']])
 
 for i in tqdm(range(parameters.general['N_steps'])):
-    _, spike_list[i, :] = sensory_neuron.forward(hair_angles[i, :])
+    _, spike_sensory[i, :] = sensory_neuron.forward(torch.from_numpy(hair_angles[i, :]))
+    _, spike_position[i] = position_neuron.forward(spike_sensory[i, :])
 
-    _, spike_inter[i] = position_neuron.forward(spike_list[i, :])
     time = np.append(time, i * parameters.general['dt'])
 
-firing_rate, spike_index = get_firing_rate(spike_inter, parameters.general['dt'])
+firing_rate = get_firing_rate_2(spike_position, parameters.general['dt'], t=0.05)
 
 fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
-ax1.plot(time[spike_index], firing_rate, color='blue')
-ax2.plot(time, joint_angle, color='red')
+ax1.plot(time[::100], joint_angle[::100], color=parameters.general['colors'][0], linestyle=parameters.general['linestyles'][0])
+ax2.plot(time[::100], firing_rate[::100], color=parameters.general['colors'][1], linestyle=parameters.general['linestyles'][1])
 plot_position_interneuron(ax1, ax2, fig, 'uni')

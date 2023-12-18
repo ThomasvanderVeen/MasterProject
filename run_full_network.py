@@ -10,7 +10,7 @@ from dictionaries import Parameters
 from functions import *
 
 N_LEGS = 6
-N_SIMULATIONS = 11
+N_SIMULATIONS = 2
 W_POS = [11.43e-3, 0, 11.43e-3, 11.43e-3, 14e-3, 8e-3, 0e-3]
 W_VEL = [0e-3, 17.4e-3, 14e-3, 2.5e-3, 5.71e-3, 0e-3, 14e-3]
 
@@ -28,8 +28,8 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     parameters = Parameters(
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
-        n_hairs=200,
-        t_total=25,
+        n_hairs=100,
+        t_total=5,
         dt=0.001,
         n_angles=18
     )
@@ -82,12 +82,12 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
 
     primitive_list.append(spike_primitive.numpy())
 
-    '''
+
     joint_angles_list.append(joint_angles)
     position_list.append(spike_position.numpy())
     velocity_list.append(spike_velocity.numpy())
     sensory_list.append(spike_sensory.numpy())
-    '''
+
 
 '''
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
@@ -105,13 +105,17 @@ Position neuron testing
 fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
 
+handles = ['Dorsal response', 'Ventral response']
 for i in range(2):
     firing_rate = get_firing_rate_2(spike_position[:, i].numpy(), parameters.general['dt'], t=0.03)
-    ax1.plot(time, firing_rate, color=parameters.general['colors'][i])
+    ax2.plot(time, firing_rate, color=parameters.general['colors'][i], linestyle=parameters.general['linestyles'][i+1], label = handles[i])
 
-ax2.plot(time, joint_angles[:, 0], color='black')
-ax2.plot(time, np.full(len(time), np.max(joint_angles[:, 0]) / 2 + np.min(joint_angles[:, 0]) / 2), linestyle='dotted',
+
+
+ax1.plot(time, joint_angles[:, 0], color='black', label='Exp. data')
+ax1.plot(time, np.full(len(time), np.max(joint_angles[:, 0]) / 2 + np.min(joint_angles[:, 0]) / 2), linestyle='dotted',
          color='black')
+
 plots.plot_position_interneuron(ax1, ax2, fig, 'bi')
 
 fig2, ax3 = plt.subplots()
@@ -120,7 +124,7 @@ ax4 = ax3.twinx()
 N_hairs, N_half = parameters.hair_field['N_hairs'], parameters.hair_field['N_hairs'] // 2
 diff = hair_field.max_list[0] - hair_field.min_list[0]
 
-for i in range(N_half)[::10]:
+for i in range(N_half)[2::5]:
     spike_sensory[spike_sensory == 0] = np.nan
     ax3.scatter(time, (-i + N_half) * spike_sensory[:, i + N_half], color=parameters.general['colors'][0], s=1)
     ax3.scatter(time, (1 + i + N_half) * spike_sensory[:, i + N_half + N_hairs], color=parameters.general['colors'][1],
@@ -144,11 +148,15 @@ ax1 = ax.twinx()
 firing_rate_down = get_firing_rate_2(spike_velocity[:, 0], parameters.general['dt'], t=0.05)
 firing_rate_up = get_firing_rate_2(spike_velocity[:, 1], parameters.general['dt'], t=0.05)
 
-ax.plot(time[1:], np.diff(joint_angles[:, 0]) / parameters.general['dt'], color='black')
-ax1.plot(time, firing_rate_down, color=parameters.general['colors'][0])
-ax1.plot(time, firing_rate_up, color=parameters.general['colors'][1])
+ax.plot(time[1:], np.diff(joint_angles[:, 0]) / parameters.general['dt'], color='black',
+        linestyle=parameters.general['linestyles'][0], label='Exp. data')
+ax1.plot(time, firing_rate_down, color=parameters.general['colors'][0],
+         linestyle=parameters.general['linestyles'][1], label='Dorsal direction')
+ax1.plot(time, firing_rate_up, color=parameters.general['colors'][1],
+         linestyle=parameters.general['linestyles'][2], label='Ventral direction')
 ax.plot(time, np.full(time.size, 0), color='black', linestyle='dotted')
 ax.set_xlim([0, 1])
+
 plots.plot_movement_binary(ax, ax1, fig)
 
 spike_velocity[spike_velocity == 0] = np.nan
@@ -156,8 +164,10 @@ spike_velocity[spike_velocity == 0] = np.nan
 fig, ax = plt.subplots()
 
 plt.plot(time, joint_angles[:, 0], color='black')
-plt.scatter(time, joint_angles[:, 0] * spike_velocity[:, 0], color=parameters.general['colors'][0], s=10)
-plt.scatter(time, joint_angles[:, 0] * spike_velocity[:, 1], color=parameters.general['colors'][1], s=10)
+plt.scatter(time, joint_angles[:, 0] * spike_velocity[:, 0], color=parameters.general['colors'][0],
+            marker=parameters.general['markers'][0], s=10)
+plt.scatter(time, joint_angles[:, 0] * spike_velocity[:, 1], color=parameters.general['colors'][1],
+            marker=parameters.general['markers'][1], s=10)
 
 plots.plot_movement_interneuron_network(ax, fig)
 
@@ -174,9 +184,9 @@ for i in range(len(joint_angles_list)):
     FN.append(intersect_down[intersect_down > 0].size)
 
 TP, FP, TN, FN = sum(TP), sum(FP), sum(TN), sum(FN)
-ACC = np.around((TP + TN) / (TP + TN + FP + FN), 3)
-TPR = np.around(TP / (TP + FN), 3)
-TNR = np.around(TN / (TN + FP), 3)
+ACC = np.around((TP + TN) / (TP + TN + FP + FN + 0.000001), 3)
+TPR = np.around(TP / (TP + FN + 0.000001), 3)
+TNR = np.around(TN / (TN + FP + 0.000001), 3)
 
 print(f'[Velocity interneuron] True positive: {TP}, false Positive: {FP}, true negative: {TN}, false negative: {FN}')
 print(f'[Velocity interneuron] Accuracy: {ACC}, true positive rate: {TPR}, true negative rate: {TNR}')
@@ -242,15 +252,22 @@ accuracy, accuracy_types = np.array([]), np.zeros([N_types.size])
 
 fig, ax = plt.subplots()
 
+LEGEND_LABELS = ['pos-pos', 'vel-vel', 'pos-vel', 'pos-pos-vel', 'vel-vel-pos', 'pos-pos-pos', 'vel-vel-vel']
+
 for i in range(parameters.primitive['n']):
     TPR = true_pos_sum[i] / (true_pos_sum[i] + false_neg_sum[i] + 0.0000001)
     TNR = true_neg_sum[i] / (true_neg_sum[i] + false_pos_sum[i] + 0.0000001)
     plt.scatter(false_pos_sum[i] / (false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
                 true_pos_sum[i] / (true_pos_sum[i] + false_neg_sum[i] + 0.0000001),
-                color=parameters.general['colors'][synapse_type[i]], s=8)
+                color=parameters.general['colors'][synapse_type[i]], s=8,
+                marker=parameters.general['markers'][synapse_type[i]], zorder=2)
     ACC_balanced = (TPR + TNR) / 2
     accuracy = np.append(accuracy, ACC_balanced)
     accuracy_types[synapse_type[i]] += ACC_balanced / N_types[synapse_type[i]]
+
+for i in range(len(LEGEND_LABELS)):
+    plt.scatter(100, 100, color=parameters.general['colors'][i], s=13,
+                marker=parameters.general['markers'][i], label=LEGEND_LABELS[i])
 
 accuracy_mean = np.mean(accuracy)
 
@@ -260,7 +277,7 @@ print(
     f'{np.around(accuracy_types[2], 3)}, pos-pos-vel: {np.around(accuracy_types[3], 3)}, vel-vel-pos: {np.around(accuracy_types[4], 3)}, '
     f'pos-pos-pos: {np.around(accuracy_types[5], 3)}, vel-vel-vel: {np.around(accuracy_types[6], 3)}')
 
-plt.plot([0, 1], [0, 1], color='red', linestyle='dotted')
+plt.plot([0, 1], [0, 1], color='black', linestyle='dotted')
 plots.plot_primitive_roc(ax, fig)
 
 '''
