@@ -24,7 +24,7 @@ markers = ['o', "^", "v", "*", "+", "x", "s", "p"]
 def plot_single_hair(ax, v):
     #plt.style.use('classic')
     fig = plt.figure(1)
-    ax.set_xlabel("Time (s)]")
+    ax.set_xlabel("Time (s)")
     ax.set_ylabel("Firing frequency (Hz)")
     ax.grid(axis='y')
     ax.minorticks_on()
@@ -37,11 +37,13 @@ def plot_single_hair(ax, v):
         ax.set_yticks([0, 40, 80, 120, 160, 200, 240, 280])
         fig.tight_layout(pad=0.5)
         fig.savefig('Images/angle.png')
+        fig.savefig('Images/angle.pdf')
     else:
         ax.legend(['ω = 24 °/s', 'ω = 47 °/s', 'ω = 88 °/s', 'ω = 151 °/s', 'ω = 245 °/s'], fancybox=False, edgecolor='black', loc='lower center')
         ax.set_yticks([0, 40, 80, 120, 160])
         fig.tight_layout(pad=0.5)
         fig.savefig('Images/angular_velocity.png')
+        fig.savefig('Images/angular_velocity.pdf')
 
     plt.close(fig)
 
@@ -54,16 +56,18 @@ def plot_heat_map(df):
 
     plt.tight_layout(pad=0.5)
     plt.savefig('Images/heat_map.png')
+    plt.savefig('Images/heat_map.pdf')
 
 
 def plot_hair_field(ax, name):
-    fig = plt.figure(1, figsize=(10, 6))
+    fig = plt.figure(1)
     ax.set_xlabel("joint angle (degrees)")
     ax.set_ylabel("hair angle (degrees)")
     ax.minorticks_on()
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/hair_field_' + name + '.png')
+    #fig.savefig('Images/hair_field_' + name + '.pdf')
     fig.clear()
 
     return
@@ -86,6 +90,7 @@ def plot_position_interneuron(ax1, ax2, fig, name):
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/position_interneuron_' + str(name) + '.png')
+    fig.savefig('Images/position_interneuron_' + str(name) + '.pdf')
     fig.clear()
 
     return
@@ -101,6 +106,7 @@ def plot_spike_timing(ax1, ax2, fig, n_index):
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/spike_timing_.png')
+    fig.savefig('Images/spike_timing_.pdf')
     fig.clear()
 
     return
@@ -120,6 +126,7 @@ def plot_movement_interneuron(ax, fig):
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron.png')
+    fig.savefig('Images/movement_interneuron.pdf')
     fig.clear()
 
     return
@@ -137,6 +144,7 @@ def plot_movement_interneuron_network(ax, fig):
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron_network.png')
+    fig.savefig('Images/movement_interneuron_network.pdf')
     fig.clear()
 
     return
@@ -154,6 +162,7 @@ def plot_movement_binary(ax, ax1, fig):
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_binary.png')
+    fig.savefig('Images/movement_binary.pdf')
     fig.clear()
 
 
@@ -168,17 +177,23 @@ def plot_primitive_roc(ax, fig):
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_ROC.png')
+    fig.savefig('Images/primitive_ROC.pdf')
     fig.clear()
 
     return
 
 
 def plot_psth(ax, fig, neuron, leg, permutations_name, label):
-    ax.set_ylabel('Likelihood of Spiking')
-    fig.text(0.33, 0.04, 'Swing', ha='center')
-    fig.text(0.66, 0.04, 'Stance')
-    ax.set_xticks([])
+    ax.set_ylabel('Likelihood of Spiking (%)')
+    ax.set_xlabel("Locomotion phase")
+    ax.set_xticks([0.375, 1.125])
+
+    labels = [item.get_text() for item in ax.get_xticklabels()]
+    labels[:] = ['Swing', 'Stance']
+    ax.set_xticklabels(labels)
+
     ax.minorticks_on()
+    ax.xaxis.set_tick_params(which='minor', bottom=False)
 
     fig.tight_layout(pad=0.5)
     if label == 'primitive':
@@ -199,6 +214,7 @@ def plot_primitive_accuracy(ax, fig, tau_list):
     ax.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v', 'mean'], loc='lower right')
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_accuracy.png')
+    fig.savefig('Images/primitive_accuracy.pdf')
 
     return
 
@@ -217,6 +233,7 @@ def plot_primitive_weights(ax, fig, tau_list, w_1, w_2):
     fig.supxlabel('τ [ms]', fontsize=15)
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_weights.png', bbox_inches='tight')
+    fig.savefig('Images/primitive_weights.pdf', bbox_inches='tight')
 
     return
 
@@ -229,10 +246,12 @@ def plot_climbing_accuracy(fig, ax, name):
         ax.set_ylabel('Balanced Accuracy')
         ax.set_xlabel('w_exc (mV)')
         fig.savefig('Images/climbing_accuracy.png', bbox_inches='tight')
+        fig.savefig('Images/climbing_accuracy.pdf', bbox_inches='tight')
     elif name == 'pitch':
         ax.set_ylabel('DTW score')
         ax.set_xlabel('w_up (mV)')
         fig.savefig('Images/pitch_accuracy.png', bbox_inches='tight')
+        fig.savefig('Images/pitch_accuracy.pdf', bbox_inches='tight')
 
 
 def plot_climbing_classifier(fig, ax):
@@ -243,20 +262,27 @@ def plot_climbing_classifier(fig, ax):
     ax.set_ylabel("Body Pitch (°)")
 
     fig.savefig('Images/climbing_classifier.png', bbox_inches='tight')
+    fig.savefig('Images/climbing_classifier.pdf', bbox_inches='tight')
 
 
 def plot_swing_stance(ax, fig, x, legs):
-    ax.set_xticks(x)
-    labels = [item.get_text() for item in ax.get_xticklabels()]
-    labels[:] = legs
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("n_sw/(n_sw+n_st)")
+    for i in range(3):
+        ax[i].grid(axis='y')
+        if i == 2:
+            ax[i].set_xticks(x)
+            labels = [item.get_text() for item in ax[i].get_xticklabels()]
+            labels[:] = legs
+            ax[i].set_xticklabels(labels)
+        else:
+            ax[i].set_xticks([])
+    fig.supylabel("$n_{sw}/(n_{sw}+n_{st})$")
     labels = ['None', 'Vel-', 'Vel+', 'Pos-', 'Pos+']
     legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
                        for i in range(len(labels))]
-    ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(1.12, 0.6))
+    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(1.12, 0.6))
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/swing_stance.png')
+    #fig.savefig('Images/swing_stance.pdf')
 
 
 def plot_pitch_estimation(ax, fig):
@@ -266,3 +292,4 @@ def plot_pitch_estimation(ax, fig):
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/pitch_estimation.png')
+    fig.savefig('Images/pitch_estimation.pdf')

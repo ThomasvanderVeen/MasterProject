@@ -9,12 +9,12 @@ position_list = pickle_open('Data/position_list')
 sensory_list = pickle_open('Data/sensory_list')
 joint_angles_list = pickle_open('Data/joint_angles_list')
 
-n_grid = 4
+n_grid = 2
 noises = [0.01, 0.05, 0.10]
 n = 100
 skip = 10
 
-parameters = Parameters(t_total=5, dt=0.0001, n_hairs=200)
+parameters = Parameters(t_total=5, dt=0.001, n_hairs=100)
 x = np.linspace(0, parameters.general['t_total'], num=parameters.general['N_steps'])
 d, d_noise = np.empty((18, len(position_list), n_grid, n_grid)), np.empty((18, len(position_list), 3))
 b_list = np.linspace(5e-4, 5e-3, num=n_grid)

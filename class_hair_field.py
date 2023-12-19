@@ -64,8 +64,6 @@ class HairField:
         self.min_joint_angle = self.min_list[i]
 
 
-'''
-
 parameters_hair_field = {'N_hairs': 10, 'min_joint_angle': 0, 'max_joint_angle': 180, 'max_angle': 90, 'overlap': 3,
                          'overlap_bi': 0}
 
@@ -100,4 +98,3 @@ for i in range(n_4 - 1):
 
 plot_hair_field(plt.gca(), 'bi')
 
-'''

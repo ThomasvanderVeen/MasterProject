@@ -322,17 +322,17 @@ for m in tqdm(range(6), desc='PSTH plot progress'):
     fig, ax = plt.subplots()
 
     for i in range(permutations_name.shape[0]):
-        ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood[i, :], color=parameters.general['colors'][0],
+        ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood[i, :]*100, color=parameters.general['colors'][0],
                    marker='^')
-        ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood[i, :], color=parameters.general['colors'][1],
+        ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood[i, :]*100, color=parameters.general['colors'][1],
                    marker='^')
 
         plots.plot_psth(ax, fig, i, m, permutations_name[i], 'primitive')
 
     for i in range(N_LEGS):
-        ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood_vel[i, :], color=parameters.general['colors'][0],
+        ax.scatter(np.linspace(0, .725, num=15), swing_bin_likelihood_vel[i, :]*100, color=parameters.general['colors'][0],
                    marker='^')
-        ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood_vel[i, :],
+        ax.scatter(np.linspace(.775, 1.5, num=15), stance_bin_likelihood_vel[i, :]*100,
                    color=parameters.general['colors'][1], marker='^')
 
         plots.plot_psth(ax, fig, i, m, position_angles[i], 'velocity')
@@ -351,15 +351,16 @@ swing_flat = np.ndarray.flatten(swing)
 
 plt.close('all')
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(3)
 
-for i in range(parameters.primitive['n']):
-    ax.scatter(i, swing_flat[i], color=parameters.general['colors'][int(base_perm[i % base_perm.shape[0], 0])], s=8)
-    if i % permutations_name.shape[0] == 0:
-        ax.plot([i, i], [0, 1], color='black', linestyle='dotted')
-ax.plot([parameters.primitive['n'], parameters.primitive['n']], [0, 1], color='black', linestyle='dotted')
-ax.plot([0, parameters.primitive['n']], [0.9, 0.9], color='red', linestyle='dotted')
-ax.plot([0, parameters.primitive['n']], [0.1, 0.1], color='red', linestyle='dotted')
+for j in range(3):
+    for i in range(parameters.primitive['n']):
+        ax[j].scatter(i, swing_flat[i], color=parameters.general['colors'][int(base_perm[i % base_perm.shape[0], j])], s=4)
+        if i % permutations_name.shape[0] == 0:
+            ax[j].plot([i, i], [0, 1], color='black', linestyle='dotted')
+    ax[j].plot([parameters.primitive['n'], parameters.primitive['n']], [0, 1], color='black', linestyle='dotted')
+    #ax[j].plot([0, parameters.primitive['n']], [0.9, 0.9], color='red', linestyle='dotted')
+    #ax[j].plot([0, parameters.primitive['n']], [0.1, 0.1], color='red', linestyle='dotted')
 
 plots.plot_swing_stance(ax, fig, x, legs)
 
