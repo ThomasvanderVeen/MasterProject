@@ -10,9 +10,9 @@ from dictionaries import Parameters
 from functions import *
 
 N_LEGS = 6
-N_SIMULATIONS = 2
-W_POS = [11.43e-3, 0, 11.43e-3, 11.43e-3, 14e-3, 8e-3, 0e-3]
-W_VEL = [0e-3, 17.4e-3, 14e-3, 2.5e-3, 5.71e-3, 0e-3, 14e-3]
+N_SIMULATIONS = 1
+W_POS = [11e-3, 0, 11e-3, 8e-3, 8e-3, 8e-3, 0e-3]
+W_VEL = [0e-3, 11e-3, 11e-3, 8e-3, 8e-3, 0e-3, 8e-3]
 
 permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, base_perm = \
     get_encoding(W_POS, W_VEL, N_LEGS)
@@ -28,7 +28,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     parameters = Parameters(
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
-        n_hairs=100,
+        n_hairs=200,
         t_total=5,
         dt=0.001,
         n_angles=18
@@ -89,13 +89,11 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     sensory_list.append(spike_sensory.numpy())
 
 
-'''
+
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
 pickle_save(sensory_list, 'Data/sensory_list')
 pickle_save(position_list, 'Data/position_list')
 pickle_save(velocity_list, 'Data/velocity_list')
-'''
-
 pickle_save(primitive_list, 'Data/primitive_list')
 
 '''
@@ -229,8 +227,8 @@ for k in tqdm(range(N_SIMULATIONS), desc='ROC plot progress'):
 
     ground_truth_list.append(ground_truth)
 
-    ground_truth_bins = convert_to_bins(ground_truth, 200)
-    spike_primitive_bins = convert_to_bins(spike_primitive, 200)
+    ground_truth_bins = convert_to_bins(ground_truth, 100)
+    spike_primitive_bins = convert_to_bins(spike_primitive, 100)
 
     for i in range(parameters.primitive['n']):
         intersect = spike_primitive_bins[:, i] + ground_truth_bins[:, i]
@@ -255,15 +253,15 @@ fig, ax = plt.subplots()
 LEGEND_LABELS = ['pos-pos', 'vel-vel', 'pos-vel', 'pos-pos-vel', 'vel-vel-pos', 'pos-pos-pos', 'vel-vel-vel']
 
 for i in range(parameters.primitive['n']):
-    TPR = true_pos_sum[i] / (true_pos_sum[i] + false_neg_sum[i] + 0.0000001)
-    TNR = true_neg_sum[i] / (true_neg_sum[i] + false_pos_sum[i] + 0.0000001)
+    MCC = matthews_correlation(true_pos_sum[i], true_neg_sum[i], false_pos_sum[i], false_neg_sum[i])
+
     plt.scatter(false_pos_sum[i] / (false_pos_sum[i] + true_neg_sum[i] + 0.0000001),
                 true_pos_sum[i] / (true_pos_sum[i] + false_neg_sum[i] + 0.0000001),
                 color=parameters.general['colors'][synapse_type[i]], s=8,
                 marker=parameters.general['markers'][synapse_type[i]], zorder=2)
-    ACC_balanced = (TPR + TNR) / 2
-    accuracy = np.append(accuracy, ACC_balanced)
-    accuracy_types[synapse_type[i]] += ACC_balanced / N_types[synapse_type[i]]
+
+    accuracy = np.append(accuracy, MCC)
+    accuracy_types[synapse_type[i]] += MCC / N_types[synapse_type[i]]
 
 for i in range(len(LEGEND_LABELS)):
     plt.scatter(100, 100, color=parameters.general['colors'][i], s=13,

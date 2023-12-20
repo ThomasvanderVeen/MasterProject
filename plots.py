@@ -185,7 +185,7 @@ def plot_primitive_roc(ax, fig):
 
 def plot_psth(ax, fig, neuron, leg, permutations_name, label):
     ax.set_ylabel('Likelihood of Spiking (%)')
-    ax.set_xlabel("Locomotion phase")
+    ax.set_xlabel("Full phase")
     ax.set_xticks([0.375, 1.125])
 
     labels = [item.get_text() for item in ax.get_xticklabels()]
@@ -208,10 +208,11 @@ def plot_psth(ax, fig, neuron, leg, permutations_name, label):
 
 
 def plot_primitive_accuracy(ax, fig, tau_list):
+    ax.minorticks_on()
     ax.set_xlabel('τ (ms)', fontsize=15)
-    ax.set_ylabel("Balanced accuracy", fontsize=15)
-    ax.set_xticks(1000 * tau_list[::2])
-    ax.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v', 'mean'], loc='lower right')
+    ax.set_ylabel("Matthews correlation", fontsize=15)
+    ax.set_xticks(1000 * tau_list)
+    ax.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v', 'mean'], loc='lower right', fancybox=False, edgecolor='black')
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_accuracy.png')
     fig.savefig('Images/primitive_accuracy.pdf')
@@ -229,7 +230,7 @@ def plot_primitive_weights(ax, fig, tau_list, w_1, w_2):
     ax[0].set_ylabel('w_pos (mV)', fontsize=15)
     ax[1].set_ylabel('w_vel (mV)', fontsize=15)
     fig.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v'], loc='upper center',
-               bbox_to_anchor=(1.08, 0.75))
+               bbox_to_anchor=(1.08, 0.75), fancybox=False, edgecolor='black')
     fig.supxlabel('τ [ms]', fontsize=15)
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_weights.png', bbox_inches='tight')
@@ -239,11 +240,12 @@ def plot_primitive_weights(ax, fig, tau_list, w_1, w_2):
 
 
 def plot_climbing_accuracy(fig, ax, name):
+    ax.minorticks_on()
     ax.plot()
-    ax.legend()
+    ax.legend(fancybox=False, edgecolor='black')
     fig.tight_layout(pad=0.5)
     if name == 'climbing':
-        ax.set_ylabel('Balanced Accuracy')
+        ax.set_ylabel('Matthews correlation')
         ax.set_xlabel('w_exc (mV)')
         fig.savefig('Images/climbing_accuracy.png', bbox_inches='tight')
         fig.savefig('Images/climbing_accuracy.pdf', bbox_inches='tight')
@@ -255,11 +257,12 @@ def plot_climbing_accuracy(fig, ax, name):
 
 
 def plot_climbing_classifier(fig, ax):
+    ax.minorticks_on()
     ax.set_ylim([-20, 75])
     ax.set_xlim([0, 20])
-    ax.legend(['body pitch', 'divide', 'spikes', 'climbing'])
+    ax.legend(['Body pitch', 'Divide', 'Spikes', 'Bin'], fancybox=False, edgecolor='black')
     ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Body Pitch (°)")
+    ax.set_ylabel("Body pitch (degrees)")
 
     fig.savefig('Images/climbing_classifier.png', bbox_inches='tight')
     fig.savefig('Images/climbing_classifier.pdf', bbox_inches='tight')
@@ -275,20 +278,21 @@ def plot_swing_stance(ax, fig, x, legs):
             ax[i].set_xticklabels(labels)
         else:
             ax[i].set_xticks([])
-    fig.supylabel("$n_{sw}/(n_{sw}+n_{st})$")
     labels = ['None', 'Vel-', 'Vel+', 'Pos-', 'Pos+']
     legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
                        for i in range(len(labels))]
-    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(1.12, 0.6))
+    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 0.1), ncols=5, fancybox=False, edgecolor='black')
+    fig.supylabel("$n_{sw}/(n_{sw}+n_{st})$")
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/swing_stance.png')
     #fig.savefig('Images/swing_stance.pdf')
 
 
 def plot_pitch_estimation(ax, fig):
-    ax.legend(['Ground Truth', 'Model', 'Moving Average'], loc='lower right')
+    ax.minorticks_on()
+    ax.legend(['Ground Truth', 'Model', 'Moving Average'], loc='lower right', fancybox=False, edgecolor='black')
     ax.set_xlabel("t (s)")
-    ax.set_ylabel("Body Pitch (a.u.)")
+    ax.set_ylabel("Body pitch (a.u.)")
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/pitch_estimation.png')

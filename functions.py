@@ -235,3 +235,15 @@ def moving_average(a, n=3):
     ret = np.cumsum(a, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
     return ret[n - 1:] / n
+
+
+def matthews_correlation(tp, tn, fp, fn):
+    numerator = (tp * tn) - (fp * fn)
+    denominator = ((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) ** 0.5
+
+    if denominator == 0:
+        return 0  # Handle division by zero
+
+    mcc = numerator / denominator
+    return mcc
+

@@ -6,14 +6,14 @@ from class_primitive_neuron import LIF_primitive
 from dictionaries import Parameters
 from functions import *
 
-N_SIMULATIONS = 9
+N_SIMULATIONS = 2
 N_SIMULATIONS_TEST = 2
 N_PLOT = 2
-N_SKIP = 100
+N_SKIP = 100 #Try with N_SKIP = 1
 
 w_1_list = np.linspace(0.1E-3, 20E-3, num=2)
-ratios = np.linspace(1.7, 1.7, num=1)
-parameters = Parameters(t_total=25, dt=0.001)
+ratios = np.linspace(1.3, 1.7, num=2)
+parameters = Parameters(t_total=5, dt=0.001)
 
 data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
@@ -143,8 +143,10 @@ fig, ax = plt.subplots()
 
 for i in range(ratios.size):
     # ax.scatter(w_1_list * 1000, accuracy_list[i, :], color=parameters.general['colors'][i], s=13)
-    ax.plot(w_1_list * 1000, accuracy_list[i, :], '-o', label=ratios[i],
-            color=parameters.general['colors'][i])
+    ax.plot(w_1_list * 1000, accuracy_list[i, :], label=f'ratio = {ratios[i]}',
+            color=parameters.general['colors'][i],
+            marker=parameters.general['markers'][i],
+            linestyle=parameters.general['linestyles'][i])
 
 plots.plot_climbing_accuracy(fig, ax, 'pitch')
 

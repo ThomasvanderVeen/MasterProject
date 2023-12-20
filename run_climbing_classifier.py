@@ -2,7 +2,7 @@ from class_primitive_neuron import LIF_primitive
 from dictionaries import Parameters
 from plots import *
 
-parameters = Parameters(t_total=25, dt=0.001)
+parameters = Parameters(t_total=5, dt=0.001)
 N_simulations = 2
 N_simulations_test = 2
 N_plot = 1
@@ -62,6 +62,8 @@ for l, m in itertools.product(range(w_2_list.size), range(w_1_list.size)):
     false_positive = difference[difference < -0.5].size
     false_negative = difference[difference > 0.5].size
 
+    MCC = matthews_correlation(true_positive, true_negative, false_positive, false_negative)
+
     TPR = true_positive / (true_positive + false_negative)
     FPR = false_positive / (false_positive + true_negative)
     TNR = true_negative / (true_negative + false_positive)
@@ -69,7 +71,7 @@ for l, m in itertools.product(range(w_2_list.size), range(w_1_list.size)):
     ACC = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
     ACC_balanced = (TPR + TNR) / 2
 
-    accuracy_list[l, m] = ACC_balanced
+    accuracy_list[l, m] = MCC
 
 max_index = np.where(np.ndarray.flatten(accuracy_list) == np.max(accuracy_list))
 spike_posture, spike_posture_binned = spike_posture_list[max_index[0][0]], spike_posture_binned_list[max_index[0][0]]
@@ -77,9 +79,10 @@ spike_posture, spike_posture_binned = spike_posture_list[max_index[0][0]], spike
 fig, ax = plt.subplots(figsize=(1.5 * 3.54, 3.54), dpi=600)
 
 for i in range(w_2_list.size):
-    ax.scatter(w_1_list * 1000, accuracy_list[i, :], color=parameters.general['colors'][i], s=13)
     ax.plot(w_1_list * 1000, accuracy_list[i, :], label=f'w_inh = {np.round(w_2_list[i] * 1000, 2)} mV',
-            color=parameters.general['colors'][i])
+            color=parameters.general['colors'][i],
+            marker=parameters.general['markers'][i],
+            linestyle=parameters.general['linestyles'][i])
 
 plot_climbing_accuracy(fig, ax, 'climbing')
 
