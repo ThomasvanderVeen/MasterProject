@@ -116,8 +116,8 @@ def plot_movement_interneuron(ax, fig):
     ax.set_xlabel(r"Angular velocity (degrees$\cdot$s$^{-1}$)")
     ax.set_ylabel("Firing frequency (Hz)")
 
-    ax.set_ylim([0, 120])
-    ax.set_xlim([0, 200])
+    #ax.set_ylim([0, 120])
+    #ax.set_xlim([0, 200])
 
     ax.legend(loc='upper left', fancybox=False, edgecolor='black')
 
@@ -152,7 +152,7 @@ def plot_movement_interneuron_network(ax, fig):
 
 def plot_movement_binary(ax, ax1, fig):
     ax.set_xlabel("Time (s)")
-    ax.set_ylabel("Joint angle (degrees)")
+    ax.set_ylabel("Angular velocity (degrees$\cdot$s$^{-1}$)")
     ax1.set_ylabel("Firing frequency (Hz)")
 
     ax.minorticks_on()

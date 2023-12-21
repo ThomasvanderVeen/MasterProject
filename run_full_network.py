@@ -10,7 +10,7 @@ from dictionaries import Parameters
 from functions import *
 
 N_LEGS = 6
-N_SIMULATIONS = 1
+N_SIMULATIONS = 10
 W_POS = [11e-3, 0, 11e-3, 8e-3, 8e-3, 8e-3, 0e-3]
 W_VEL = [0e-3, 11e-3, 11e-3, 8e-3, 8e-3, 0e-3, 8e-3]
 
@@ -64,7 +64,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     time, spike_sensory = np.array([]), torch.empty(hair_angles.shape)
     spike_position, spike_velocity, spike_primitive = \
         [torch.empty((parameters.general['N_steps'], par['n'])) for par in parameters_list[1:]]
-
+    spike_voltage = torch.empty((parameters.general['N_steps'], parameters.velocity['n']))
     for i in range(parameters.general['N_steps']):
         time = np.append(time, i * parameters.general['dt'])
         _, spike_sensory[i, :] = sensory_neuron.forward(torch.from_numpy(hair_angles[i, :]))
@@ -72,7 +72,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         reshaped_spikes = torch.reshape(spike_sensory[i, :],
                                         (parameters.velocity['n'], (parameters.hair_field['N_hairs'])))
 
-        _, spike_velocity[i, :] = velocity_neuron.forward(reshaped_spikes)
+        spike_voltage[i, :], spike_velocity[i, :] = velocity_neuron.forward(reshaped_spikes, fill_with_ones(reshaped_spikes))
         _, spike_position[i, :] = position_neuron.forward(
             reshaped_spikes[:, int(parameters.hair_field['N_hairs'] / 2) - 20:])
 

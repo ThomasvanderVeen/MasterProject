@@ -1,6 +1,11 @@
-from matplotlib.patches import Rectangle
-from scipy import stats
-from plots import *
+import numpy as np
+import torch
+from functions import *
 
-a = np.exp(np.linspace(0, 10, num=100))
-print(np.percentile(a, 25), np.percentile(a, 75))
+tensor = torch.zeros(2)
+
+
+
+new_tensor = fill_with_ones(tensor)
+
+print(new_tensor)

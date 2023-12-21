@@ -247,3 +247,30 @@ def matthews_correlation(tp, tn, fp, fn):
     mcc = numerator / denominator
     return mcc
 
+
+def fill_with_ones(tensor):
+    # Find the maximum index containing a one for each column
+    if tensor.sum() < 0.5:
+        result_tensor = torch.zeros(tensor.shape)
+
+    elif tensor.ndim == 1:
+        x = torch.linspace(0, 0.1, steps=tensor.shape[0])
+        max_index = torch.argmax(tensor + x)
+
+        # Create a mask to set all values above the maximum index to one
+        mask = torch.arange(tensor.shape[0]) < max_index
+
+        # Use the mask to update the tensor
+        result_tensor = torch.where(mask, 1, 0)
+    else:
+        x = torch.linspace(0, 0.1, steps=tensor.shape[1]).repeat(tensor.shape[0], 1)
+        max_indices = torch.argmax(tensor + x, dim=1)
+
+        # Create a mask to set all values above the maximum index to one
+        mask = torch.arange(tensor.shape[1]).unsqueeze(0) < max_indices.unsqueeze(1)
+
+        # Use the mask to update the tensor
+        result_tensor = torch.where(mask, 1, 0)
+
+    return result_tensor
+

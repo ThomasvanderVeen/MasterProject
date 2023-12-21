@@ -14,9 +14,9 @@ parameters = Parameters(t_total=5, dt=0.001)
 N_SIMULATIONS = 1
 N_LEGS = 6
 N_WEIGHTS = 10
-N_TAU = 5
+N_TAU = 7
 
-tau_list = np.linspace(1e-3, 5e-3, num=N_TAU)
+tau_list = np.linspace(1e-3, 2e-3, num=N_TAU)
 w_1 = np.linspace(0e-3, 20e-3, num=N_WEIGHTS)
 w_2 = np.linspace(0e-3, 20e-3, num=N_WEIGHTS)
 w_1_opt, w_2_opt, accuracy_opt = \

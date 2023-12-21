@@ -64,7 +64,7 @@ class LIF_simple(nn.Module):
     def initialize_state(self):
         self.state = None
 
-    def forward(self, input):
+    def forward(self, input, input_2):
         if self.state is None:
             self.state = self.NeuronState(V=torch.full((self.n,), self.V_R, dtype=torch.float64, device=input.device),
                                           G=torch.full((self.n, self.N_input), self.G_r, device=input.device),
@@ -77,15 +77,26 @@ class LIF_simple(nn.Module):
         I = self.state.I
 
         V += self.dt * (self.V_R - V) / self.tau
-        # G += self.dt*(self.G_r-G)/self.tau_G
+
+        G += self.dt*(self.G_r-G)/self.tau_G
+
+        G += -G * input_2
+
 
         V += torch.sum(G * input, dim=1)
-        # G += -G*(1-self.p)*input
+
+        G += -G*(1-self.p)*input
+        #print(G[0, ::20])
+        #print(-G*(1-self.p)*input)
+        #print(-G[:5, 0] * (1 - -3) * input_2[:5, 0])
         spk = activation(V - self.V_T)
+        #print(V[0] - self.V_R, torch.sum(G * input, dim=1)[0])
+        #print(spk[0])
+
         count_refr = self.refr * input + (1 - input) * (count_refr - 1)
 
         V = (1 - spk) * V + spk * self.V_R
-        G = (1 - input) * self.G_r * (count_refr <= 0) + input * 0 + (1 - input) * 0 * (count_refr > 0)
+        #G = (1 - input) * self.G_r * (count_refr <= 0) + input * 0 + (1 - input) * 0 * (count_refr > 0)
 
         self.state = self.NeuronState(V=V, G=G, count_refr=count_refr, spk=spk, I=I)
 
