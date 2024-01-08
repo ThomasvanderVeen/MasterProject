@@ -1,40 +1,28 @@
-from brian2 import *
+from class_velocity_neuron import LIF_simple
+from dictionaries import Parameters
+from functions import *
+import matplotlib.pyplot as plt
 
-# Define the Izhikevich model parameters for a bursting neuron
-a = 0.02
-b = 0.2
-c = -65
-d = 6
+parameters = Parameters(t_total=5, dt=0.001, n_hairs=1)
 
-# Neuron model equations
-eqs = '''
-dv/dt = 0.04*v**2 + 5*v + 140 - u + I : 1
-du/dt = a*(b*v - u) : 1
-I : 1 (constant)
-'''
+parameters.velocity['n'] = 1
+parameters.velocity['p'] = 0.1
+parameters.velocity['tau_i'] = 2e-3
 
-# Initial conditions
-v0 = -70
-u0 = b * v0
+velocity_neuron = define_and_initialize(LIF_simple, parameters.velocity)
 
-# Create a bursting neuron group
-bursting_neuron = NeuronGroup(1, model=eqs, threshold='v>=30', reset='v=c; u+=d', method='euler')
+N_steps = 100
 
-# Set initial conditions
-bursting_neuron.v = v0
-bursting_neuron.u = u0
+input_1, input_2 = torch.zeros(N_steps), torch.zeros(N_steps)
 
-# Set a current input to trigger bursting
-bursting_neuron.I = 10
+input_1[10::5] = 1
 
-# Monitor the membrane potential
-mon = StateMonitor(bursting_neuron, 'v', record=0)
+voltage, spikes = np.zeros(N_steps), np.zeros(N_steps)
 
-# Run the simulation
-run(100*ms)
+for i in range(N_steps):
+    voltage[i], spikes[i] = velocity_neuron.forward(input_1[i], input_2[i])
 
-# Plot the membrane potential
-plot(mon.t/ms, mon.v[0])
-xlabel('Time (ms)')
-ylabel('Membrane Potential')
-show()
+plt.scatter(range(N_steps), spikes)
+plt.show()
+
+print(np.sum(spikes))

@@ -112,7 +112,7 @@ def plot_spike_timing(ax1, ax2, fig, n_index):
     return
 
 
-def plot_movement_interneuron(ax, fig):
+def plot_movement_interneuron(ax, fig, name):
     ax.set_xlabel(r"Angular velocity (degrees$\cdot$s$^{-1}$)")
     ax.set_ylabel("Firing frequency (Hz)")
 
@@ -125,8 +125,8 @@ def plot_movement_interneuron(ax, fig):
     ax.grid(zorder=0)
 
     fig.tight_layout(pad=0.5)
-    fig.savefig('Images/movement_interneuron.png')
-    fig.savefig('Images/movement_interneuron.pdf')
+    fig.savefig(f'Images/movement_interneuron_{name}.png')
+    fig.savefig(f'Images/movement_interneuron_{name}.pdf')
     fig.clear()
 
     return

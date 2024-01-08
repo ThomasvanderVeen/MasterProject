@@ -18,7 +18,7 @@ class Parameters:
         self.position = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 50e-3, 'tau_W': 25e-3, 'tau_epsp': 6e-3, 'b': 1e-3,
                          'V_R': -70e-3, 'n': 2 * n_angles, 'N_input': n_hairs // 2 + 20, 'dt': dt, 'refrac': 0}
 
-        self.velocity = {'tau': 1e-3, 'tau_G': 30e-3, 'G_r': 60e-3, 'p': 0.1, 'V_T': -50e-3,
+        self.velocity = {'tau': 1e-3, 'tau_G': 30e-3, 'G_r': 40e-3, 'p': 0.1, 'V_T': -50e-3,
                          'V_R': -70e-3, 'n': 2 * n_angles, 'N_input': n_hairs,
                          'dt': dt, 'refrac': 0.006}
 

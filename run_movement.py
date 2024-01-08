@@ -5,18 +5,18 @@ from dictionaries import Parameters
 from functions import *
 from plots import *
 
-N_SPEEDS = 4
+N_SPEEDS = 6
 
-n_hairs_list = [200]
-p_list = [0.1, 0.5, 0.9]
+tau_list = [1e-3, 2e-3, 3e-3]
+n_hairs_list = [25, 50, 75]
 
-fig, ax = plt.subplots()
+fig1, ax1 = plt.subplots()
+fig2, ax2 = plt.subplots()
 
-
-for l, k in itertools.product(range(len(p_list)), range(len(n_hairs_list))):
+for l, k in itertools.product(range(len(tau_list)), range(len(n_hairs_list))):
     parameters = Parameters(max_joint_angle=180, min_joint_angle=0, n_hairs=n_hairs_list[k], t_total=5, dt=0.001, n_angles=1)
 
-    speeds = np.linspace(10, 600, num=N_SPEEDS)
+    speeds = np.linspace(10, 450, num=N_SPEEDS)
     ramp = (45 / (speeds * parameters.general['dt'])).astype(int)
 
     parameters.sensory['n'] = int(parameters.sensory['n'] / 2)
@@ -26,7 +26,7 @@ for l, k in itertools.product(range(len(p_list)), range(len(n_hairs_list))):
     hair_field = HairField(parameters.hair_field)
     hair_field.get_receptive_field()
 
-    parameters.velocity['p'] = p_list[l]
+    parameters.velocity['tau_i'] = tau_list[l]
 
     neurons = [AdEx, LIF_simple]
     parameters_list = [parameters.sensory, parameters.velocity]
@@ -56,7 +56,13 @@ for l, k in itertools.product(range(len(p_list)), range(len(n_hairs_list))):
         #plt.plot(range(firing_rate.size), firing_rate)
         #plt.show()
 
-    ax.plot(speeds, spikes_rates, color=parameters.general['colors'][k], marker=parameters.general['markers'][k],
-            linestyle=parameters.general['linestyles'][l], label='$N_{h}$ = ' + str(n_hairs_list[k]) + ', p = ' + str(p_list[l]), zorder=2)
+    if l==0:
+        ax1.scatter(speeds, spikes_rates, color=parameters.general['colors'][k], marker=parameters.general['markers'][k],
+                label='$N_{h}$ = ' + str(n_hairs_list[k]), zorder=2)
 
-plot_movement_interneuron(ax, fig)
+    if k==len(n_hairs_list)-1:
+        ax2.scatter(speeds, spikes_rates, color=parameters.general['colors'][l], marker=parameters.general['markers'][l],
+                label=r'$\tau_I$ = ' + str(tau_list[l] * 1000) + 'ms', zorder=2)
+
+plot_movement_interneuron(ax1, fig1, 'hairs')
+plot_movement_interneuron(ax2, fig2, 'tau')
