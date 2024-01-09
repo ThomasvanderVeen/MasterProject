@@ -70,7 +70,7 @@ class AdEx(nn.Module):
     def forward(self, input):
         if self.state is None:
             self.state = self.NeuronState(V=torch.full((self.n,), self.E_L, dtype=torch.float64, device=input.device),
-                                          w=torch.zeros(self.n, device=input.device),
+                                          w=torch.linspace(0, 0, self.n, device=input.device),
                                           count_refr=torch.zeros(self.n, device=input.device),
                                           spk=torch.zeros(self.n, device=input.device))
         V = self.state.V

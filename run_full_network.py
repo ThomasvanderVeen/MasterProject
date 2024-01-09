@@ -10,7 +10,7 @@ from dictionaries import Parameters
 from functions import *
 
 N_LEGS = 6
-N_SIMULATIONS = 10
+N_SIMULATIONS = 1
 W_POS = [11e-3, 0, 11e-3, 8e-3, 8e-3, 8e-3, 0e-3]
 W_VEL = [0e-3, 11e-3, 11e-3, 8e-3, 8e-3, 0e-3, 8e-3]
 
@@ -28,8 +28,8 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     parameters = Parameters(
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
-        n_hairs=200,
-        t_total=5,
+        n_hairs=60,
+        t_total=10,
         dt=0.001,
         n_angles=18
     )
@@ -42,8 +42,8 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         raise Exception(f'Total frames exceeds maximum: {joint_angles.shape[0]} < {N_frames}')
 
     joint_angles = joint_angles[:N_frames]
-    joint_angles = interpolate(joint_angles, parameters.general['t_total'], parameters.general['N_steps'])
 
+    joint_angles = interpolate(joint_angles, parameters.general['t_total'], parameters.general['N_steps'])
     hair_angles = np.zeros((joint_angles.shape[0], 2 * joint_angles.shape[1] * parameters.hair_field['N_hairs']))
 
     for i in range(parameters.general['n_angles']):
@@ -69,12 +69,13 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         time = np.append(time, i * parameters.general['dt'])
         _, spike_sensory[i, :] = sensory_neuron.forward(torch.from_numpy(hair_angles[i, :]))
 
+        #print(spike_sensory[i, 25], hair_angles[i, 25])
+
         reshaped_spikes = torch.reshape(spike_sensory[i, :],
                                         (parameters.velocity['n'], (parameters.hair_field['N_hairs'])))
 
-        spike_voltage[i, :], spike_velocity[i, :] = velocity_neuron.forward(reshaped_spikes, fill_with_ones(reshaped_spikes))
-        _, spike_position[i, :] = position_neuron.forward(
-            reshaped_spikes[:, int(parameters.hair_field['N_hairs'] / 2) - 20:])
+        _, spike_velocity[i, :] = velocity_neuron.forward(reshaped_spikes, fill_with_ones(reshaped_spikes))
+        _, spike_position[i, :] = position_neuron.forward(reshaped_spikes[:, int(parameters.hair_field['N_hairs'] / 2):])
 
         pos_vel_spikes = prepare_spikes_primitive(spike_velocity[i, :], spike_position[i, :], permutations,
                                                   primitive_filter)
@@ -105,9 +106,8 @@ ax2 = ax1.twinx()
 
 handles = ['Dorsal response', 'Ventral response']
 for i in range(2):
-    firing_rate = get_firing_rate_2(spike_position[:, i].numpy(), parameters.general['dt'], t=0.03)
+    firing_rate = get_firing_rate_2(spike_position[:, i].numpy(), parameters.general['dt'], t=0.1)
     ax2.plot(time, firing_rate, color=parameters.general['colors'][i], linestyle=parameters.general['linestyles'][i+1], label = handles[i])
-
 
 
 ax1.plot(time, joint_angles[:, 0], color='black', label='Exp. data')
@@ -153,7 +153,7 @@ ax1.plot(time, firing_rate_down, color=parameters.general['colors'][0],
 ax1.plot(time, firing_rate_up, color=parameters.general['colors'][1],
          linestyle=parameters.general['linestyles'][2], label='Ventral direction')
 ax.plot(time, np.full(time.size, 0), color='black', linestyle='dotted')
-ax.set_xlim([0, 1])
+
 
 plots.plot_movement_binary(ax, ax1, fig)
 
@@ -174,8 +174,8 @@ for i in range(len(joint_angles_list)):
     spike_velocity, joint_angles = velocity_list[i], joint_angles_list[i]
     joint_velocity = np.diff(joint_angles, axis=0)
 
-    intersect_up = joint_velocity * spike_velocity[1:, 1::2]
-    intersect_down = joint_velocity * spike_velocity[1:, 0::2]
+    intersect_up = (joint_velocity * spike_velocity[1:, 1::2])[int(2/parameters.general['dt']):]
+    intersect_down = (joint_velocity * spike_velocity[1:, 0::2])[int(2/parameters.general['dt']):]
     TP.append(intersect_up[intersect_up > 0].size)
     FP.append(intersect_up[intersect_up < 0].size)
     TN.append(intersect_down[intersect_down < 0].size)

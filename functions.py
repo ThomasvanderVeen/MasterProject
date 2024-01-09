@@ -66,7 +66,7 @@ def interpolate(old_array, t_total, n_steps, boolean=False):
     for i in range(old_array.shape[1]):
         new_array[:, i] = np.interp(x_new, x_old, old_array[:, i])
         if not boolean:
-            new_array[:, i] = gaussian_filter1d(new_array[:, i], sigma=5)
+            new_array[:, i] = gaussian_filter1d(new_array[:, i], sigma=1)
         if boolean:
             new_array[:, i][new_array[:, i] > 0.5] = 1
             new_array[:, i][new_array[:, i] <= 0.50] = 0
@@ -264,7 +264,7 @@ def fill_with_ones(tensor):
         result_tensor = torch.where(mask, 1, 0)
     else:
         x = torch.linspace(0, 0.1, steps=tensor.shape[1]).repeat(tensor.shape[0], 1)
-        max_indices = torch.argmax(tensor + x, dim=1)
+        max_indices = torch.argmax(tensor, dim=1)
 
         # Create a mask to set all values above the maximum index to one
         mask = torch.arange(tensor.shape[1]).unsqueeze(0) < max_indices.unsqueeze(1)

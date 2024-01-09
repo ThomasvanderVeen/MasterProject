@@ -44,7 +44,7 @@ activation = SurrGradSpike.apply
 
 
 class LIF_simple(nn.Module):
-    NeuronState = namedtuple('NeuronState', ['V', 'G', 'count_refr', 'spk', 'I', 'h'])
+    NeuronState = namedtuple('NeuronState', ['V', 'G', 'count_refr', 'spk', 'I'])
 
     def __init__(self, parameters):
         super(LIF_simple, self).__init__()
@@ -58,7 +58,6 @@ class LIF_simple(nn.Module):
         self.N_input = parameters['N_input']
         self.dt = parameters['dt']
         self.refrac = parameters['refrac']
-        self.tau_i = parameters['tau_i']
         self.refr = self.refrac / self.dt
         self.state = None
 
@@ -71,39 +70,30 @@ class LIF_simple(nn.Module):
                                           G=torch.full((self.n, self.N_input), self.G_r, device=input.device),
                                           count_refr=torch.full((self.n, self.N_input), self.refr, device=input.device),
                                           spk=torch.zeros(self.n, device=input.device),
-                                          I=torch.zeros(self.n, device=input.device),
-                                          h=torch.zeros(self.n, device=input.device))
+                                          I=torch.zeros((self.n), device=input.device))
         V = self.state.V
         G = self.state.G
         count_refr = self.state.count_refr
         I = self.state.I
-        h = self.state.h
 
-        h = 1
+        V += self.dt * (self.V_R - V) / self.tau
 
-        #V += self.dt * (self.V_R - V) / self.tau + I
+        G = G * (1-input_2)
 
-        G += self.dt*(self.G_r-G)/self.tau_G
+        V += torch.sum(G * input, dim=1) + I
 
-        I += -self.dt*(I)/self.tau_i
-
-        G += -G * input_2
-
-
-        #V += torch.sum(G * input, dim=1)
-        I += torch.sum(G * input, dim=1)
-
-        V += self.dt * (self.V_R - V) / self.tau + I
-
+        G += self.dt * (self.G_r - G) / self.tau_G
         G += -G*(1-self.p)*input
 
         spk = activation(V - self.V_T)
+
+
 
         count_refr = self.refr * input + (1 - input) * (count_refr - 1)
 
         V = (1 - spk) * V + spk * self.V_R
         #G = (1 - input) * self.G_r * (count_refr <= 0) + input * 0 + (1 - input) * 0 * (count_refr > 0)
 
-        self.state = self.NeuronState(V=V, G=G, count_refr=count_refr, spk=spk, I=I, h=h)
+        self.state = self.NeuronState(V=V, G=G, count_refr=count_refr, spk=spk, I=I)
 
         return V, spk
