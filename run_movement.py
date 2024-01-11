@@ -5,10 +5,10 @@ from dictionaries import Parameters
 from functions import *
 from plots import *
 
-N_SPEEDS = 6
+N_SPEEDS = 2
 
-tau_list = [1e-3]
-n_hairs_list = [15, 30, 45, 60]
+tau_list = [1e-3, 10e-3]
+n_hairs_list = [15, 60]
 
 fig1, ax1 = plt.subplots()
 fig2, ax2 = plt.subplots()
@@ -21,6 +21,7 @@ for l, k in itertools.product(range(len(tau_list)), range(len(n_hairs_list))):
 
     parameters.sensory['n'] = int(parameters.sensory['n'] / 2)
     parameters.velocity['n'] = 1
+    parameters.velocity['tau_min'] = tau_list[l]
 
     spikes_rates = []
     hair_field = HairField(parameters.hair_field)
@@ -46,6 +47,7 @@ for l, k in itertools.product(range(len(tau_list)), range(len(n_hairs_list))):
         for i in range(parameters.general['N_steps']):
             _, spike_list[i, :] = sensory_neuron.forward(torch.from_numpy(hair_angles[i, :]))
             _, spike_inter[i] = velocity_neuron.forward(spike_list[i, :], fill_with_ones(spike_list[i, :]))
+            print(_)
             time = np.append(time, i * parameters.sensory['dt'])
 
         firing_rate = get_firing_rate_2(spike_inter[200:ramp[j]+200], parameters.general['dt'], t=0.001, nan_bool=0)

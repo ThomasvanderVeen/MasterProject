@@ -52,8 +52,11 @@ class LIF_simple(nn.Module):
         self.tau_G = parameters['tau_G']
         self.p = parameters['p']
         self.tau = parameters['tau']
+        self.tau_min = parameters['tau_min']
+        self.tau_plus = parameters['tau_plus']
         self.V_R = parameters['V_R']
         self.V_T = parameters['V_T']
+        self.V_h = parameters['V_h']
         self.n = parameters['n']
         self.N_input = parameters['N_input']
         self.dt = parameters['dt']
@@ -72,19 +75,26 @@ class LIF_simple(nn.Module):
                                           spk=torch.zeros(self.n, device=input.device),
                                           I=torch.zeros((self.n), device=input.device),
                                           h=torch.zeros((self.n), device=input.device))
+
+
+
         V = self.state.V
         G = self.state.G
         count_refr = self.state.count_refr
         I = self.state.I
-        h = self.h
+        h = self.state.h
+        I = 10*h * torch.heaviside(V - self.V_h, torch.zeros(self.n, dtype=torch.float64)) * (V - self.V_R)
 
-        V += self.dt * (self.V_R - V) / self.tau
+        h += -self.dt*(h/self.tau_min)*torch.heaviside(V - self.V_h, torch.zeros(self.n, dtype=torch.float64)) + \
+             (self.dt*(1-h)/self.tau_plus)*torch.heaviside(self.V_h - V, torch.zeros(self.n, dtype=torch.float64))
 
         G = G * (1-input_2)
 
-        I = h*torch.heaviside(V-60e-3)*(V-self.V_R)
+        V += self.dt * (self.V_R - V) / self.tau
 
         V += torch.sum(G * input, dim=1) + I
+
+
 
         G += self.dt * (self.G_r - G) / self.tau_G
         G += -G*(1-self.p)*input
@@ -95,9 +105,9 @@ class LIF_simple(nn.Module):
 
         count_refr = self.refr * input + (1 - input) * (count_refr - 1)
 
-        V = (1 - spk) * V + spk * self.V_R
+        V = (1 - spk) * V + spk * (self.V_h + 1e-3)
         #G = (1 - input) * self.G_r * (count_refr <= 0) + input * 0 + (1 - input) * 0 * (count_refr > 0)
 
-        self.state = self.NeuronState(V=V, G=G, count_refr=count_refr, spk=spk, I=I)
+        self.state = self.NeuronState(V=V, G=G, count_refr=count_refr, spk=spk, I=I, h=h)
 
         return V, spk
