@@ -44,7 +44,7 @@ activation = SurrGradSpike.apply
 
 
 class LIF_simple(nn.Module):
-    NeuronState = namedtuple('NeuronState', ['V', 'G', 'count_refr', 'spk', 'I'])
+    NeuronState = namedtuple('NeuronState', ['V', 'G', 'count_refr', 'spk', 'I', 'h'])
 
     def __init__(self, parameters):
         super(LIF_simple, self).__init__()
@@ -70,15 +70,19 @@ class LIF_simple(nn.Module):
                                           G=torch.full((self.n, self.N_input), self.G_r, device=input.device),
                                           count_refr=torch.full((self.n, self.N_input), self.refr, device=input.device),
                                           spk=torch.zeros(self.n, device=input.device),
-                                          I=torch.zeros((self.n), device=input.device))
+                                          I=torch.zeros((self.n), device=input.device),
+                                          h=torch.zeros((self.n), device=input.device))
         V = self.state.V
         G = self.state.G
         count_refr = self.state.count_refr
         I = self.state.I
+        h = self.h
 
         V += self.dt * (self.V_R - V) / self.tau
 
         G = G * (1-input_2)
+
+        I = h*torch.heaviside(V-60e-3)*(V-self.V_R)
 
         V += torch.sum(G * input, dim=1) + I
 

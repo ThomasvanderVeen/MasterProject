@@ -4,14 +4,6 @@ from functions import *
 import matplotlib.pyplot as plt
 
 
-a = torch.Tensor([[0, 0, 1], [0, 0, 0], [0, 1, 0], [1, 0, 0]])
-b = torch.Tensor([0, 0, 0])
-print(a, a.shape)
-
-print(fill_with_ones(a))
-
-
-
 parameters = Parameters(t_total=5, dt=0.001, n_hairs=1)
 
 parameters.velocity['n'] = 1
