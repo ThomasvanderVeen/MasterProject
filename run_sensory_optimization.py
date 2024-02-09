@@ -40,16 +40,16 @@ class RampGenerator:
 real_values = np.array(
     [[25, 105, 155, 200, 255], [0.1, 60, 95, 130, 150], [165, 150, 140, 130, 120], [90, 90, 90, 90, 90],
      [1.5, 0.8, 0.4, 0.2, 0.1]])
-v_var, v_stat = np.array([24, 47, 88, 151, 245]), 47
+v_var, v_stat = np.array([24, 47, 88, 151, 245]), 60.1
 max_angle_var, max_angle_stat = np.array([15, 23, 34, 46, 60]), 37
-parameters = Parameters(max_joint_angle=1, min_joint_angle=1, n_hairs=1, t_total=10, dt=0.0001, n_angles=1)
+parameters = Parameters(max_joint_angle=1, min_joint_angle=1, n_hairs=1, t_total=13, dt=0.001, n_angles=1)
 parameters.sensory['n'] = 5
-t_total = 10
+t_total = 13
 colors = ['green', 'yellow', 'blue', 'black', 'red']
 spike_rates, spike_rates_list = [], []
 times, times_list = [], []
-tau_list = np.linspace(400, 800, num=8, dtype=int) * 1E-3
-b_list = np.linspace(1, 22, num=8, dtype=int) * 1e-12
+tau_list = np.linspace(500, 200, num=1, dtype=int) * 1E-3
+b_list = np.linspace(25, 1000, num=1, dtype=int) * 1e-12
 MSE = np.zeros((tau_list.size, b_list.size))
 
 for l, m in itertools.product(range(tau_list.size), range(b_list.size)):
@@ -58,7 +58,7 @@ for l, m in itertools.product(range(tau_list.size), range(b_list.size)):
         N_steps = round(t_total / parameters.sensory['dt'])
         N_ramp = np.around(max_angle / (v * parameters.sensory['dt'])).astype(int)
         height = np.empty([parameters.sensory['n']])
-        height[:] = max_angle / 37e9
+        height[:] = max_angle / 15e9
 
         parameters_ramp = {'n_ramp': N_ramp, 'n_steps': N_steps, 'height': height, 'low': np.full(height.shape, 0)}
         ramp_generator = RampGenerator(parameters_ramp)

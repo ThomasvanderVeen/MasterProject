@@ -66,7 +66,7 @@ def interpolate(old_array, t_total, n_steps, boolean=False):
     for i in range(old_array.shape[1]):
         new_array[:, i] = np.interp(x_new, x_old, old_array[:, i])
         if not boolean:
-            new_array[:, i] = gaussian_filter1d(new_array[:, i], sigma=1)
+            new_array[:, i] = gaussian_filter1d(new_array[:, i], sigma=5)
         if boolean:
             new_array[:, i][new_array[:, i] > 0.5] = 1
             new_array[:, i][new_array[:, i] <= 0.50] = 0
@@ -273,4 +273,26 @@ def fill_with_ones(tensor):
         result_tensor = torch.where(mask, 1, 0)
 
     return result_tensor
+
+
+def safe_divide(numerator, denominator):
+    if isinstance(numerator, np.ndarray):
+        result = np.zeros_like(numerator, dtype=float)
+
+        # Check for zero values in the denominator
+        zero_indices = np.where(denominator == 0)
+
+        # Set the corresponding elements in the result to zero for zero denominators
+        result[zero_indices] = 0.0
+
+        # Perform division for non-zero denominators
+        non_zero_indices = np.where(denominator != 0)
+        result[non_zero_indices] = numerator[non_zero_indices] / denominator[non_zero_indices]
+    else:
+        if denominator == 0:
+            return 0
+        else:
+            return numerator/denominator
+
+    return result
 

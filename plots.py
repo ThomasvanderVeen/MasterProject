@@ -51,7 +51,7 @@ def plot_single_hair(ax, v):
 
 
 def plot_heat_map(df):
-    heatmap = sns.heatmap(data=df, annot=True, fmt='.3g', cbar_kws={'label': 'mean absolute error (MAE)'})
+    heatmap = sns.heatmap(data=df, annot=True, fmt='.3g', cbar_kws={'label': 'Error E'})
     heatmap.set(xlabel='b (pV)', ylabel=r'$\tau_w$ (s)')
 
     plt.tight_layout(pad=0.5)
@@ -99,10 +99,12 @@ def plot_position_interneuron(ax1, ax2, fig, name):
 def plot_spike_timing(ax1, ax2, fig, n_index):
     ax1.set_xlabel("Time (s)")
     ax1.set_ylabel("Neuron index")
-    ax1.set_yticks(np.arange(1, n_index + 1)[::10])
+    ax1.set_yticks(np.arange(1, n_index + 2)[::5])
     ax2.set_ylabel("Joint angle (degrees)")
 
     ax2.minorticks_on()
+    ax1.minorticks_on()
+    #ax1.set_ylim([1, n_index+1])
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/spike_timing_.png')
@@ -117,7 +119,7 @@ def plot_movement_interneuron(ax, fig, name):
     ax.set_ylabel("Firing frequency (Hz)")
 
     #ax.set_ylim([0, 120])
-    #ax.set_xlim([0, 200])
+    #ax.set_xlim([0, 220])
 
     ax.legend(loc='upper left', fancybox=False, edgecolor='black')
 
@@ -214,7 +216,7 @@ def plot_primitive_accuracy(ax, fig, tau_list):
     ax.set_xlabel('τ (ms)', fontsize=15)
     ax.set_ylabel("Matthews correlation", fontsize=15)
     ax.set_xticks(1000 * tau_list)
-    ax.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v', 'mean'], loc='lower right', fancybox=False, edgecolor='black')
+    ax.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v', 'mean'], loc='lower right', fancybox=False, edgecolor='black', ncol=3)
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/primitive_accuracy.png')
     fig.savefig('Images/primitive_accuracy.pdf')
@@ -283,7 +285,7 @@ def plot_swing_stance(ax, fig, x, legs):
     labels = ['None', 'Vel-', 'Vel+', 'Pos-', 'Pos+']
     legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
                        for i in range(len(labels))]
-    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 0.1), ncols=5, fancybox=False, edgecolor='black')
+    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 0.1), fancybox=False, edgecolor='black')
     fig.supylabel("$n_{sw}/(n_{sw}+n_{st})$")
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/swing_stance.png')

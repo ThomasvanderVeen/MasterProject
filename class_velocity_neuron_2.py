@@ -43,20 +43,15 @@ class SurrGradSpike(torch.autograd.Function):
 activation = SurrGradSpike.apply
 
 
-class LIF_simple(nn.Module):
-    NeuronState = namedtuple('NeuronState', ['V', 'G', 'count_refr', 'spk', 'I', 'h'])
+class VelocityNeuron2(nn.Module):
+    NeuronState = namedtuple('NeuronState', ['V', 'w', 'count_refr', 'spk', 'I'])
 
     def __init__(self, parameters):
-        super(LIF_simple, self).__init__()
-        self.G_r = parameters['G_r']
-        self.tau_G = parameters['tau_G']
-        self.p = parameters['p']
+        super(VelocityNeuron2, self).__init__()
         self.tau = parameters['tau']
-        self.tau_min = parameters['tau_min']
-        self.tau_plus = parameters['tau_plus']
         self.V_R = parameters['V_R']
         self.V_T = parameters['V_T']
-        self.V_h = parameters['V_h']
+        self.w = parameters['w']
         self.n = parameters['n']
         self.N_input = parameters['N_input']
         self.dt = parameters['dt']
@@ -67,51 +62,26 @@ class LIF_simple(nn.Module):
     def initialize_state(self):
         self.state = None
 
-    def forward(self, input, input_2):
+    def forward(self, input):
         if self.state is None:
             self.state = self.NeuronState(V=torch.full((self.n,), self.V_R, dtype=torch.float64, device=input.device),
-                                          G=torch.full((self.n, self.N_input), self.G_r, device=input.device),
-                                          count_refr=torch.full((self.n, self.N_input), self.refr, device=input.device),
+                                          w=torch.tensor(self.w, device=input.device),
+                                          count_refr=torch.zeros(self.n, device=input.device),
                                           spk=torch.zeros(self.n, device=input.device),
-                                          I=torch.zeros((self.n), device=input.device),
-                                          h=torch.zeros((self.n), device=input.device))
-
-
-
+                                          I=torch.zeros((self.n, self.N_input), device=input.device))
         V = self.state.V
-        G = self.state.G
+        w = self.state.w
         count_refr = self.state.count_refr
         I = self.state.I
-        h = self.state.h
 
+        V += self.dt*(self.V_R-V)/self.tau
 
-
-        I = h * torch.heaviside(V - self.V_h + 1e-4, torch.zeros(self.n, dtype=torch.float64)) * (V - self.V_R)*self.dt/0.5e-4
-
-        h += -self.dt*(h/self.tau_min)*torch.heaviside(V - self.V_h, torch.zeros(self.n, dtype=torch.float64)) + \
-             (self.dt*(1-h)/self.tau_plus)*torch.heaviside(self.V_h - V, torch.zeros(self.n, dtype=torch.float64))
-
-        #G = G * (1-input_2)
-
-        V += self.dt * (self.V_R - V) / self.tau
-
-        V += torch.sum(G * input * torch.heaviside(G - self.G_r*0.8, torch.zeros_like(G)), dim=1) + I
-
-
-
-
-        G += self.dt * (self.G_r - G) / self.tau_G
-        G += -G*(1-self.p)*input
+        V += w * input
 
         spk = activation(V - self.V_T)
+        count_refr = self.refr*spk + (1-spk)*(count_refr-1)
+        V = (1 - spk) * V * (count_refr <= 0) + spk * self.V_R + (1 - spk) * self.V_R * (count_refr > 0)
 
-
-
-        count_refr = self.refr * input + (1 - input) * (count_refr - 1)
-
-        V = (1 - spk) * V + spk * (self.V_h)
-        #G = (1 - input) * self.G_r * (count_refr <= 0) + input * 0 + (1 - input) * 0 * (count_refr > 0)
-
-        self.state = self.NeuronState(V=V, G=G, count_refr=count_refr, spk=spk, I=I, h=h)
+        self.state = self.NeuronState(V=V, w=w, count_refr=count_refr, spk=spk, I=I)
 
         return V, spk

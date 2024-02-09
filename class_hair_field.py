@@ -98,3 +98,17 @@ for i in range(n_4 - 1):
 
 plot_hair_field(plt.gca(), 'bi')
 
+'''
+plt.plot(joint_angle, hair_angles[:, n_4:n_2], color=colors[0])
+plt.plot(joint_angle, hair_angles[:, n_2+n_4:], color=colors[1], linestyle = '--')
+
+
+for i in range(n_4 - 1):
+    plt.fill_between([hair_field.receptive_field[0,  n_4 + i + 1], hair_field.receptive_field[1, n_4 + i]], [90, 90], color=colors[0],
+                     alpha=0.25)
+    plt.fill_between([hair_field.receptive_field[0, n_2 + n_4 + i + 1], hair_field.receptive_field[1, n_2 + n_4 + i]], [90, 90],
+                 color=colors[1],
+                 alpha=0.25,)
+
+plot_hair_field(plt.gca(), 'bi')
+'''
