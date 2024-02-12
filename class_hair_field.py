@@ -64,7 +64,7 @@ class HairField:
         self.min_joint_angle = self.min_list[i]
 
 
-parameters_hair_field = {'N_hairs': 10, 'min_joint_angle': 0, 'max_joint_angle': 180, 'max_angle': 90, 'overlap': 3,
+parameters_hair_field = {'N_hairs': 10, 'min_joint_angle': 0, 'max_joint_angle': 180, 'max_angle': 90, 'overlap': 2,
                          'overlap_bi': 0}
 
 joint_angle = np.linspace(parameters_hair_field['min_joint_angle'], parameters_hair_field['max_joint_angle'], num=1200)
@@ -85,17 +85,17 @@ hair_angles = hair_field.get_hair_angle(joint_angle)
 n_2 = int(hair_field.N_hairs/2)
 n_4 = int(n_2/2)
 
-plt.plot(joint_angle, hair_angles[:, n_4:n_2], color=colors[0])
-plt.plot(joint_angle, hair_angles[:, n_2+n_4:], color=colors[1], linestyle = '--')
+plt.plot(joint_angle, hair_angles[:, :n_2], color=colors[0])
+plt.plot(joint_angle, hair_angles[:, n_2:], color=colors[1], linestyle = '--')
 
-
-for i in range(n_4 - 1):
-    plt.fill_between([hair_field.receptive_field[0,  n_4 + i + 1], hair_field.receptive_field[1, n_4 + i]], [90, 90], color=colors[0],
+'''
+for i in range(n_2 - 1):
+    plt.fill_between([hair_field.receptive_field[0,  n_2 + i + 1], hair_field.receptive_field[1, n_2 + i]], [90, 90], color=colors[0],
                      alpha=0.25)
-    plt.fill_between([hair_field.receptive_field[0, n_2 + n_4 + i + 1], hair_field.receptive_field[1, n_2 + n_4 + i]], [90, 90],
+    plt.fill_between([hair_field.receptive_field[0, n_2 + i + 1], hair_field.receptive_field[1, n_2 + i]], [90, 90],
                  color=colors[1],
                  alpha=0.25,)
-
+'''
 plot_hair_field(plt.gca(), 'bi')
 
 '''

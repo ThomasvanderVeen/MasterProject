@@ -29,8 +29,8 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
     parameters = Parameters(
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
-        n_hairs=100,
-        t_total=10,
+        n_hairs=50,
+        t_total=5,
         dt=0.001,
         n_angles=18
     )
@@ -55,7 +55,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         hair_angles[:, i * 2 * parameters.hair_field['N_hairs']: 2 * parameters.hair_field['N_hairs']
                                                                  + i * 2 * parameters.hair_field[
                                                                      'N_hairs']] = hair_field.get_hair_angle(
-            joint_angles[:, i]) / 5e9
+            joint_angles[:, i]) / 18e9
 
     neurons = [AdEx, LIF, LIF_simple, LIF_primitive, VelocityNeuron2]
     parameters_list = [parameters.sensory, parameters.position, parameters.velocity, parameters.primitive, parameters.velocity_2]
@@ -97,8 +97,8 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
 pickle_save(sensory_list, 'Data/sensory_list')
 pickle_save(position_list, 'Data/position_list')
-pickle_save(velocity_list, 'Data/velocity_list')
-pickle_save(primitive_list, 'Data/primitive_list')
+#pickle_save(velocity_list, 'Data/velocity_list')
+#pickle_save(primitive_list, 'Data/primitive_list')
 
 '''
 Position neuron testing

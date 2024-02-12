@@ -39,7 +39,7 @@ def plot_single_hair(ax, v):
         fig.savefig('Images/angle.png')
         fig.savefig('Images/angle.pdf')
     else:
-        ax.legend(['ω = 24 °/s', 'ω = 47 °/s', 'ω = 88 °/s', 'ω = 151 °/s', 'ω = 245 °/s'], fancybox=False, edgecolor='black', loc='lower center')
+        ax.legend(['ω = 96 °/s', 'ω = 188 °/s', 'ω = 352 °/s', 'ω = 604 °/s', 'ω = 980 °/s'], fancybox=False, edgecolor='black', loc='lower center')
         ax.set_yticks([0, 40, 80, 120, 160])
         fig.tight_layout(pad=0.5)
         fig.savefig('Images/angular_velocity.png')
@@ -52,7 +52,7 @@ def plot_single_hair(ax, v):
 
 def plot_heat_map(df):
     heatmap = sns.heatmap(data=df, annot=True, fmt='.3g', cbar_kws={'label': 'Error E'})
-    heatmap.set(xlabel='b (pV)', ylabel=r'$\tau_w$ (s)')
+    heatmap.set(xlabel='b (pV)', ylabel=r'$\frac{I}{\phi}$ (nA degree$^{-1}$)')
 
     plt.tight_layout(pad=0.5)
     plt.savefig('Images/heat_map.png')
@@ -67,7 +67,7 @@ def plot_hair_field(ax, name):
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/hair_field_' + name + '.png')
-    #fig.savefig('Images/hair_field_' + name + '.pdf')
+    fig.savefig('Images/hair_field_' + name + '.pdf')
     fig.clear()
 
     return
