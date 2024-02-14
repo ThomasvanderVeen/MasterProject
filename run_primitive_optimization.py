@@ -9,14 +9,14 @@ velocity_list = pickle_open('Data/velocity_list')
 position_list = pickle_open('Data/position_list')
 ground_truth_list = pickle_open('Data/ground_truth')
 
-parameters = Parameters(t_total=10, dt=0.001)
-#N_SIMULATIONS = len(velocity_list)
-N_SIMULATIONS = 1
+parameters = Parameters(t_total=5, dt=0.001)
+N_SIMULATIONS = len(velocity_list)
+N_SIMULATIONS = 10
 N_LEGS = 6
-N_WEIGHTS = 10
+N_WEIGHTS = 11
 N_TAU = 7
 
-tau_list = np.linspace(0e-3, 3e-3, num=N_TAU)
+tau_list = np.linspace(1e-3, 2.5e-3, num=N_TAU)
 w_1 = np.linspace(0e-3, 20e-3, num=N_WEIGHTS)
 w_2 = np.linspace(0e-3, 20e-3, num=N_WEIGHTS)
 w_1_opt, w_2_opt, accuracy_opt = \
@@ -46,8 +46,14 @@ for p, l, m in itertools.product(range(tau_list.size), range(N_WEIGHTS), range(N
 
             _, spike_primitive[j, :] = primitive_neuron.forward(pos_vel_spikes)
 
-        ground_truth_bins = convert_to_bins(ground_truth, 200)
-        spike_primitive_bins = convert_to_bins(spike_primitive, 200)
+        ground_truth_bins = convert_to_bins(ground_truth, 100)
+        spike_primitive_bins = convert_to_bins(spike_primitive, 100)
+
+        #print(spike_primitive_bins.shape, ground_truth_bins.shape)
+
+        #plt.scatter(range(ground_truth_bins[:, 0].size), ground_truth_bins[:, 0])
+        #plt.scatter(range(ground_truth_bins[:, 0].size), spike_primitive_bins[:, 0]*2)
+        #plt.show()
 
         for j in range(parameters.primitive['n']):
             intersect = spike_primitive_bins[:, j] + ground_truth_bins[:, j]
@@ -67,8 +73,8 @@ for p, l, m in itertools.product(range(tau_list.size), range(N_WEIGHTS), range(N
 
     for i in range(parameters.primitive['n']):
         MCC = matthews_correlation(true_pos_sum[i], true_neg_sum[i], false_pos_sum[i], false_neg_sum[i])
+        ACC = (true_pos_sum[i] + true_neg_sum[i]) / (true_pos_sum[i] + true_neg_sum[i] + false_pos_sum[i] + false_neg_sum[i])
         accuracy_types[synapse_type[i]] += MCC / N_types[synapse_type[i]]
-
     accuracy_matrix[l, m, :] = accuracy_types
 
     for i in range(7):

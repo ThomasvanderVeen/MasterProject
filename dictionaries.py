@@ -18,15 +18,15 @@ class Parameters:
         self.position = {'E_L': -70e-3, 'V_T': -50e-3, 'tau': 25e-3, 'tau_W': 3e-3, 'tau_epsp': 6e-3, 'b': 16e-3,
                          'V_R': -70e-3, 'n': 2 * n_angles, 'N_input': n_hairs // 2, 'dt': dt, 'refrac': 0}
 
-        self.velocity = {'tau': 1e-3, 'tau_G': 5e-3, 'tau_min': 4e-3, 'tau_plus': 1e-3, 'G_r': 17e-3, 'p': 0.01, 'V_T': -50e-3,
+        self.velocity = {'tau': 1e-3, 'tau_G': 5e-3, 'tau_min': 3e-3, 'tau_plus': 1e-3, 'G_r': 17e-3, 'p': 0.01, 'V_T': -50e-3,
                          'V_R': -70e-3, 'V_h': -53e-3, 'n': 2 * n_angles, 'N_input': n_hairs,
                          'dt': dt, 'refrac': 0.006}
 
         self.primitive = {'tau': 2e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 0, 'w': 0,
                           'N_input': 3, 'dt': dt, 'refrac': 0}
 
-        self.posture = {'tau': 50e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 2, 'w': 0,
+        self.posture = {'tau': 2e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 2, 'w': 0,
                         'N_input': 672, 'dt': dt, 'refrac': 0}
 
-        self.velocity_2 = {'tau': 5e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 36 * n_hairs, 'w': 10e-3,
+        self.velocity_2 = {'tau': 5e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 36 * n_hairs, 'w': 11.7e-3,
                         'N_input': 1, 'dt': dt, 'refrac': 0}

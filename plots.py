@@ -135,7 +135,7 @@ def plot_movement_interneuron(ax, fig, name):
 
 
 def plot_movement_interneuron_network(ax, fig):
-    ax.set_xlim([2, 7])
+    ax.set_xlim([1, 5])
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Joint angle (degrees)")
 
@@ -143,7 +143,7 @@ def plot_movement_interneuron_network(ax, fig):
 
     ax.minorticks_on()
 
-    ax.legend(['Exp. data', 'Dorsal direction', 'ventral direction'], loc='lower right', fancybox=False, edgecolor='black')
+    ax.legend(['Exp. data', 'Backward direction', 'Forward direction'], loc='upper right', fancybox=False, edgecolor='black')
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_interneuron_network.png')
@@ -162,7 +162,7 @@ def plot_movement_binary(ax, ax1, fig):
     ax.minorticks_on()
     ax1.minorticks_on()
 
-    fig.legend(loc='upper right', fancybox=False, edgecolor='black', bbox_to_anchor=[0.87, 0.97])
+    fig.legend(loc='upper left', fancybox=False, edgecolor='black', bbox_to_anchor=[0.18, 0.97])
 
     fig.tight_layout(pad=0.5)
     fig.savefig('Images/movement_binary.png')
@@ -285,10 +285,10 @@ def plot_swing_stance(ax, fig, x, legs):
     labels = ['None', 'Vel-', 'Vel+', 'Pos-', 'Pos+']
     legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
                        for i in range(len(labels))]
-    fig.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, 0.1), fancybox=False, edgecolor='black')
+    fig.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.07), fancybox=False, edgecolor='black', ncol=5)
     fig.supylabel("$n_{sw}/(n_{sw}+n_{st})$")
-    fig.tight_layout(pad=0.5)
-    fig.savefig('Images/swing_stance.png')
+    fig.tight_layout(pad=1)
+    fig.savefig('Images/swing_stance.png', bbox_inches='tight')
     #fig.savefig('Images/swing_stance.pdf')
 
 

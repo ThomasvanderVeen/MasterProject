@@ -10,10 +10,11 @@ from class_velocity_neuron_2 import VelocityNeuron2
 from dictionaries import Parameters
 from functions import *
 
+VEL = 2
 N_LEGS = 6
-N_SIMULATIONS = 1
-W_POS = [11e-3, 0, 11e-3, 8e-3, 8e-3, 8e-3, 0e-3]
-W_VEL = [0e-3, 11e-3, 11e-3, 8e-3, 8e-3, 0e-3, 8e-3]
+N_SIMULATIONS = 10
+W_POS = [5e-3, 0, 5e-3, 5e-3, 5e-3, 5e-3, 0e-3]
+W_VEL = [0e-3, 5e-3, 5e-3, 5e-3, 5e-3, 0e-3, 5e-3]
 
 permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, base_perm = \
     get_encoding(W_POS, W_VEL, N_LEGS)
@@ -73,14 +74,13 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
 
         reshaped_spikes = torch.reshape(spike_sensory[i, :],
                                         (parameters.velocity['n'], (parameters.hair_field['N_hairs'])))
+        if VEL == 1:
+            _, spike_velocity[i, :] = velocity_neuron.forward(reshaped_spikes, fill_with_ones(reshaped_spikes))
+        else:
+            _, spike_velocity_2[i, :] = velocity_neuron_2.forward(spike_sensory[i, :])
+            spike_velocity[i, :] = torch.sum(spike_velocity_2[i, :].reshape(-1, parameters.hair_field['N_hairs']), axis=1)
+            spike_velocity[i, :][spike_velocity[i, :] > 1 ] = 1
 
-        #_, spike_velocity[i, :] = velocity_neuron.forward(reshaped_spikes, fill_with_ones(reshaped_spikes))
-        #print(spike_velocity[i, :].shape)
-        _, spike_velocity_2[i, :] = velocity_neuron_2.forward(spike_sensory[i, :])
-        #print(torch.sum(spike_velocity_2[i, :].reshape(-1, 50), axis=1).shape)
-
-        spike_velocity[i, :] = torch.sum(spike_velocity_2[i, :].reshape(-1, parameters.hair_field['N_hairs']), axis=1)
-        spike_velocity[i, :][spike_velocity[i, :] > 1 ] = 1
         _, spike_position[i, :] = position_neuron.forward(reshaped_spikes[:, int(parameters.hair_field['N_hairs'] / 2):])
 
         pos_vel_spikes = prepare_spikes_primitive(spike_velocity[i, :], spike_position[i, :], permutations,
@@ -97,8 +97,8 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
 pickle_save(joint_angles_list, 'Data/joint_angles_list')
 pickle_save(sensory_list, 'Data/sensory_list')
 pickle_save(position_list, 'Data/position_list')
-#pickle_save(velocity_list, 'Data/velocity_list')
-#pickle_save(primitive_list, 'Data/primitive_list')
+pickle_save(velocity_list, 'Data/velocity_list')
+pickle_save(primitive_list, 'Data/primitive_list')
 
 '''
 Position neuron testing
@@ -135,7 +135,7 @@ ax4.plot(time, joint_angles[:, 0], color='black')
 ax3.plot(time, np.full(time.shape, N_half + 0.5), linestyle='dotted', color='black')
 ax3.set_ylim(1 - N_hairs * .05, N_hairs * 1.05)
 ax4.set_ylim(hair_field.min_list[0] - .05 * diff, hair_field.max_list[0] + .05 * diff)
-print(hair_field.min_list[0], hair_field.max_list[0])
+
 
 plots.plot_spike_timing(ax3, ax4, fig2, N_hairs)
 
@@ -153,9 +153,9 @@ firing_rate_up = get_firing_rate_2(spike_velocity[:, 1], parameters.general['dt'
 ax.plot(time[1:], np.diff(joint_angles[:, 0]) / parameters.general['dt'], color='black',
         linestyle=parameters.general['linestyles'][0], label='Exp. data')
 ax1.plot(time, firing_rate_down, color=parameters.general['colors'][0],
-         linestyle=parameters.general['linestyles'][1], label='Dorsal direction')
+         linestyle=parameters.general['linestyles'][1], label='Backward direction')
 ax1.plot(time, firing_rate_up, color=parameters.general['colors'][1],
-         linestyle=parameters.general['linestyles'][2], label='Ventral direction')
+         linestyle=parameters.general['linestyles'][2], label='Forward direction')
 ax.plot(time, np.full(time.size, 0), color='black', linestyle='dotted')
 
 plots.plot_movement_binary(ax, ax1, fig)
@@ -225,14 +225,15 @@ for k in tqdm(range(N_SIMULATIONS), desc='ROC plot progress'):
         ground_truth_2 = prepare_spikes_primitive(torch.from_numpy(ground_vel[j, :]),
                                                   torch.from_numpy(ground_pos[j, :]),
                                                   permutations, primitive_filter) + primitive_filter_2
+
         ground_truth_2 = torch.sum(ground_truth_2, dim=1)
         ground_truth[j, ground_truth_2 > 2.9] = 1
         ground_truth[j, ground_truth_2 < 2.9] = 0
 
     ground_truth_list.append(ground_truth)
 
-    ground_truth_bins = convert_to_bins(ground_truth[int(2/parameters.general['dt']):], 200)
-    spike_primitive_bins = convert_to_bins(spike_primitive[int(2/parameters.general['dt']):], 200)
+    ground_truth_bins = convert_to_bins(ground_truth[int(0/parameters.general['dt']):], 100)
+    spike_primitive_bins = convert_to_bins(spike_primitive[int(0/parameters.general['dt']):], 100)
 
     for i in range(parameters.primitive['n']):
         intersect = spike_primitive_bins[:, i] + ground_truth_bins[:, i]
@@ -446,9 +447,10 @@ for k in range(6):
 legend_elements = [
     Line2D([0], [0], marker='o', color='w', label=LEGEND_LABELS[i], markerfacecolor=parameters.general['colors'][i + 1], markersize=7)
     for i in range(len(LEGEND_LABELS))]
-fig.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.09))
+fig.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.09), ncol=4, fancybox=False, edgecolor='black')
 
 fig.tight_layout(pad=0.5)
 fig.savefig('Images/swing_stance_comparison.png', bbox_inches='tight')
+fig.savefig('Images/swing_stance_comparison.pdf', bbox_inches='tight')
 
 
