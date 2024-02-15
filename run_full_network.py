@@ -13,8 +13,8 @@ from functions import *
 VEL = 2
 N_LEGS = 6
 N_SIMULATIONS = 10
-W_POS = [5e-3, 0, 5e-3, 5e-3, 5e-3, 5e-3, 0e-3]
-W_VEL = [0e-3, 5e-3, 5e-3, 5e-3, 5e-3, 0e-3, 5e-3]
+W_POS = [16e-3, 0, 16e-3, 16e-3, 16e-3, 8e-3, 0e-3]
+W_VEL = [0e-3, 10e-3, 10e-3, 0e-3, 4e-3, 0e-3, 10e-3]
 
 permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, base_perm = \
     get_encoding(W_POS, W_VEL, N_LEGS)
@@ -420,8 +420,8 @@ for k in range(6):
         ax.plot([-2, 5], [y_val, y_val], linestyle='dotted', color='black', zorder=0)
 
     for j in range(4):
-        ax.errorbar(np.array([0, 1, 2]) + 0.2 * j, swings_average[:, j, k],
-                    yerr=(swings_min[:, j, k], swings_max[:, j, k]), capsize=3, fmt='None', color=parameters.general['colors'][j + 1])
+        #ax.errorbar(np.array([0, 1, 2]) + 0.2 * j, swings_average[:, j, k],
+         #           yerr=(swings_min[:, j, k], swings_max[:, j, k]), capsize=3, fmt='None', color=parameters.general['colors'][j + 1])
 
         for i in range(3):
             ax.add_patch(Rectangle((i + 0.2 * j - 0.08, swings_25[i, j, k]), 0.16,

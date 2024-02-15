@@ -22,7 +22,7 @@ class Parameters:
                          'V_R': -70e-3, 'V_h': -53e-3, 'n': 2 * n_angles, 'N_input': n_hairs,
                          'dt': dt, 'refrac': 0.006}
 
-        self.primitive = {'tau': 2e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 0, 'w': 0,
+        self.primitive = {'tau': 1.75e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 0, 'w': 0,
                           'N_input': 3, 'dt': dt, 'refrac': 0}
 
         self.posture = {'tau': 2e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 2, 'w': 0,
