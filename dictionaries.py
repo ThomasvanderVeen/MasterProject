@@ -28,5 +28,5 @@ class Parameters:
         self.posture = {'tau': 2e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 2, 'w': 0,
                         'N_input': 672, 'dt': dt, 'refrac': 0}
 
-        self.velocity_2 = {'tau': 5e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 36 * n_hairs, 'w': 11.7e-3,
+        self.velocity_2 = {'tau': 5e-3, 'V_T': -50e-3, 'V_R': -70e-3, 'n': 36 * n_hairs, 'w': 11.5e-3,
                         'N_input': 1, 'dt': dt, 'refrac': 0}

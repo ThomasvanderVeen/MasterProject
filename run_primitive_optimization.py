@@ -16,7 +16,7 @@ N_LEGS = 6
 N_WEIGHTS = 11
 N_TAU = 7
 
-tau_list = np.linspace(1e-3, 2.5e-3, num=N_TAU)
+tau_list = np.linspace(0.5e-3, 3.5e-3, num=N_TAU)
 w_1 = np.linspace(0e-3, 20e-3, num=N_WEIGHTS)
 w_2 = np.linspace(0e-3, 20e-3, num=N_WEIGHTS)
 w_1_opt, w_2_opt, accuracy_opt = \

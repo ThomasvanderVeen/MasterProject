@@ -216,10 +216,11 @@ def plot_primitive_accuracy(ax, fig, tau_list):
     ax.set_xlabel('τ (ms)', fontsize=15)
     ax.set_ylabel("Matthews correlation", fontsize=15)
     ax.set_xticks(1000 * tau_list)
-    ax.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v', 'mean'], loc='lower right', fancybox=False, edgecolor='black', ncol=3)
+    fig.legend(['p-p', 'v-v', 'p-v', 'p-p-v', 'v-v-p', 'p-p-p', 'v-v-v', 'mean'], loc='upper center',
+               bbox_to_anchor=(1.08, 0.75), fancybox=False, edgecolor='black')
     fig.tight_layout(pad=0.5)
-    fig.savefig('Images/primitive_accuracy.png')
-    fig.savefig('Images/primitive_accuracy.pdf')
+    fig.savefig('Images/primitive_accuracy.png', bbox_inches='tight')
+    fig.savefig('Images/primitive_accuracy.pdf', bbox_inches='tight')
 
     return
 
@@ -286,8 +287,8 @@ def plot_swing_stance(ax, fig, x, legs):
     legend_elements = [Line2D([0], [0], marker='o', color='w', label=labels[i], markerfacecolor=colors[i], markersize=7)
                        for i in range(len(labels))]
     fig.legend(handles=legend_elements, loc='lower center', bbox_to_anchor=(0.5, -0.07), fancybox=False, edgecolor='black', ncol=5)
-    fig.supylabel("$n_{sw}/(n_{sw}+n_{st})$")
-    fig.tight_layout(pad=1)
+    fig.supylabel(r"$r_{sw/st}$")
+    fig.tight_layout(pad=0.5)
     fig.savefig('Images/swing_stance.png', bbox_inches='tight')
     #fig.savefig('Images/swing_stance.pdf')
 

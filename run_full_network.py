@@ -393,9 +393,9 @@ for i, j, k in np.ndindex((6, 3, 112)):
         index_to_update = np.argmax(swings[j, perm_type, i, :] == 0)
         swings[j, perm_type, i, index_to_update] = swing[i, k]
 
-swings_average = np.mean(swings, axis=3)
-swings_max = np.max(swings, axis=3) - swings_average
-swings_min = swings_average - np.min(swings, axis=3)
+swings_average = np.median(swings, axis=3)
+swings_max = np.percentile(swings, 90, axis=3) - swings_average
+swings_min = swings_average - np.percentile(swings, 10, axis=3)
 swings_std = np.std(swings, axis=3)
 swings_25 = np.percentile(swings, 25, axis=3)
 swings_75 = np.percentile(swings, 75, axis=3)
@@ -420,8 +420,8 @@ for k in range(6):
         ax.plot([-2, 5], [y_val, y_val], linestyle='dotted', color='black', zorder=0)
 
     for j in range(4):
-        #ax.errorbar(np.array([0, 1, 2]) + 0.2 * j, swings_average[:, j, k],
-         #           yerr=(swings_min[:, j, k], swings_max[:, j, k]), capsize=3, fmt='None', color=parameters.general['colors'][j + 1])
+        ax.errorbar(np.array([0, 1, 2]) + 0.2 * j, swings_average[:, j, k],
+                    yerr=(swings_min[:, j, k], swings_max[:, j, k]), capsize=3, fmt='None', color=parameters.general['colors'][j + 1])
 
         for i in range(3):
             ax.add_patch(Rectangle((i + 0.2 * j - 0.08, swings_25[i, j, k]), 0.16,
