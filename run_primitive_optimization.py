@@ -9,14 +9,14 @@ velocity_list = pickle_open('Data/velocity_list')
 position_list = pickle_open('Data/position_list')
 ground_truth_list = pickle_open('Data/ground_truth')
 
-parameters = Parameters(t_total=5, dt=0.001)
+parameters = Parameters(t_total=10, dt=0.001)
 N_SIMULATIONS = len(velocity_list)
-N_SIMULATIONS = 10
+N_SIMULATIONS = 1
 N_LEGS = 6
-N_WEIGHTS = 11
-N_TAU = 7
+N_WEIGHTS = 4
+N_TAU = 2
 
-tau_list = np.linspace(0.5e-3, 3.5e-3, num=N_TAU)
+tau_list = np.linspace(1.5e-3, 2e-3, num=N_TAU)
 w_1 = np.linspace(0e-3, 20e-3, num=N_WEIGHTS)
 w_2 = np.linspace(0e-3, 20e-3, num=N_WEIGHTS)
 w_1_opt, w_2_opt, accuracy_opt = \
@@ -49,38 +49,53 @@ for p, l, m in itertools.product(range(tau_list.size), range(N_WEIGHTS), range(N
         ground_truth_bins = convert_to_bins(ground_truth, 100)
         spike_primitive_bins = convert_to_bins(spike_primitive, 100)
 
-        #print(spike_primitive_bins.shape, ground_truth_bins.shape)
-
-        #plt.scatter(range(ground_truth_bins[:, 0].size), ground_truth_bins[:, 0])
-        #plt.scatter(range(ground_truth_bins[:, 0].size), spike_primitive_bins[:, 0]*2)
-        #plt.show()
-
         for j in range(parameters.primitive['n']):
+            #if synapse_type[j] == 3:
+                #plt.plot(range(100), ground_truth_bins[:, j])
+                #plt.plot(range(100), spike_primitive_bins[:, j])
             intersect = spike_primitive_bins[:, j] + ground_truth_bins[:, j]
             difference = spike_primitive_bins[:, j] - ground_truth_bins[:, j]
+
+            #print(difference[difference < -0.5].size)
+            #print(int(intersect[intersect > 1.5].size))
 
             true_positive[i, j] = intersect[intersect > 1.5].size
             false_positive[i, j] = difference[difference > 0.5].size
             true_negative[i, j] = intersect[intersect < 0.5].size
             false_negative[i, j] = difference[difference < -0.5].size
+            #print(false_negative[i, synapse_type[j]], synapse_type[j])
 
+
+
+
+
+    #print(false_positive)
     true_pos_sum = np.sum(true_positive, axis=0)
     false_pos_sum = np.sum(false_positive, axis=0)
     true_neg_sum = np.sum(true_negative, axis=0)
     false_neg_sum = np.sum(false_negative, axis=0)
+
+
+
     accuracy, accuracy_types = np.array([]), np.zeros([7])
     N_types = np.bincount(synapse_type)
 
-    for i in range(parameters.primitive['n']):
-        MCC = matthews_correlation(true_pos_sum[i], true_neg_sum[i], false_pos_sum[i], false_neg_sum[i])
+    for i in range(7):
+        #print(true_pos_sum[i], true_neg_sum[i], false_pos_sum[i], false_neg_sum[i])
+        indices = np.where(np.array(synapse_type) == i)
+
+        MCC = matthews_correlation(np.sum(true_pos_sum[indices]), np.sum(true_neg_sum[indices]), np.sum(false_pos_sum[indices]), np.sum(false_neg_sum[indices]))
         ACC = (true_pos_sum[i] + true_neg_sum[i]) / (true_pos_sum[i] + true_neg_sum[i] + false_pos_sum[i] + false_neg_sum[i])
-        accuracy_types[synapse_type[i]] += MCC / N_types[synapse_type[i]]
+        accuracy_types[i] = MCC
     accuracy_matrix[l, m, :] = accuracy_types
 
     for i in range(7):
         indexes = np.where(accuracy_matrix[:, :, i] == np.max(accuracy_matrix[:, :, i]))
         w_1_opt[p, i], w_2_opt[p, i] = w_1[indexes[0][0]], w_2[indexes[1][0]]
         accuracy_opt[p, i] = accuracy_matrix[indexes[0][-1], indexes[1][-1], i]
+
+w_1_opt[:, [1, 6]] = 0
+w_2_opt[:, [0, 5]] = 0
 
 fig, ax = plt.subplots(figsize=(1.5 * 3.54, 3.54), dpi=600)
 

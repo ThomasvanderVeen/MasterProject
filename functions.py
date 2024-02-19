@@ -66,7 +66,7 @@ def interpolate(old_array, t_total, n_steps, boolean=False):
     for i in range(old_array.shape[1]):
         new_array[:, i] = np.interp(x_new, x_old, old_array[:, i])
         if not boolean:
-            new_array[:, i] = gaussian_filter1d(new_array[:, i], sigma=5)
+            new_array[:, i] = gaussian_filter1d(new_array[:, i], sigma=20)
         if boolean:
             new_array[:, i][new_array[:, i] > 0.5] = 1
             new_array[:, i][new_array[:, i] <= 0.50] = 0
@@ -143,7 +143,7 @@ def get_encoding(w_pos=[0, 0, 0, 0, 0, 0, 0], w_vel=[0, 0, 0, 0, 0, 0, 0], n=6):
     return perm, synapse_type, weights, negative_mask, positive_mask, final_perm, base_perm.astype(int)
 
 
-def convert_to_bins(old_array, n_bins, sum_bool=False):
+def convert_to_bins(old_array, n_bins, minimum=1, sum_bool=False):
     old_array = np.transpose(old_array)
 
     while old_array.shape[1] != n_bins:
@@ -153,7 +153,7 @@ def convert_to_bins(old_array, n_bins, sum_bool=False):
             old_array = np.column_stack((old_array, old_array[:, -1]))
 
     if not sum_bool:
-        old_array = (old_array > 0).astype(int)
+        old_array = (old_array > minimum).astype(int)
 
     return np.transpose(old_array)
 
@@ -241,10 +241,7 @@ def matthews_correlation(tp, tn, fp, fn):
     numerator = (tp * tn) - (fp * fn)
     denominator = ((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) ** 0.5
 
-    if denominator == 0:
-        return 0  # Handle division by zero
-
-    mcc = numerator / denominator
+    mcc = safe_divide(numerator, denominator)
     return mcc
 
 

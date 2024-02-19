@@ -12,9 +12,9 @@ from functions import *
 
 VEL = 2
 N_LEGS = 6
-N_SIMULATIONS = 10
+N_SIMULATIONS = 1
 W_POS = [16e-3, 0, 16e-3, 16e-3, 16e-3, 8e-3, 0e-3]
-W_VEL = [0e-3, 10e-3, 10e-3, 0e-3, 4e-3, 0e-3, 10e-3]
+W_VEL = [0e-3, 12e-3, 10e-3, 4e-3, 4e-3, 0e-3, 10e-3]
 
 permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, base_perm = \
     get_encoding(W_POS, W_VEL, N_LEGS)
@@ -31,7 +31,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
         n_hairs=50,
-        t_total=5,
+        t_total=10,
         dt=0.001,
         n_angles=18
     )
@@ -85,7 +85,9 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
 
         pos_vel_spikes = prepare_spikes_primitive(spike_velocity[i, :], spike_position[i, :], permutations,
                                                   primitive_filter)
+
         _, spike_primitive[i, :] = primitive_neuron.forward(pos_vel_spikes)
+
 
     primitive_list.append(spike_primitive.numpy())
 
@@ -216,6 +218,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='ROC plot progress'):
     for i in range(N_joints):
         mid = np.max(joint_angles[:, i]) / 2 + np.min(joint_angles[:, i]) / 2
         diff = np.diff(joint_angles[:, i])
+
         ground_vel[np.where(diff < 0), 0 + 2 * i] = 1
         ground_vel[np.where(diff > 0), 1 + 2 * i] = 1
         ground_pos[np.where(joint_angles[:, i] < mid), 0 + 2 * i] = 1
@@ -232,8 +235,9 @@ for k in tqdm(range(N_SIMULATIONS), desc='ROC plot progress'):
 
     ground_truth_list.append(ground_truth)
 
-    ground_truth_bins = convert_to_bins(ground_truth[int(0/parameters.general['dt']):], 100)
+    ground_truth_bins = convert_to_bins(ground_truth[int(0/parameters.general['dt']):], 100, 50)
     spike_primitive_bins = convert_to_bins(spike_primitive[int(0/parameters.general['dt']):], 100)
+
 
     for i in range(parameters.primitive['n']):
         intersect = spike_primitive_bins[:, i] + ground_truth_bins[:, i]
@@ -257,16 +261,17 @@ fig, ax = plt.subplots()
 
 LEGEND_LABELS = ['pos-pos', 'vel-vel', 'pos-vel', 'pos-pos-vel', 'vel-vel-pos', 'pos-pos-pos', 'vel-vel-vel']
 
-for i in range(parameters.primitive['n']):
-    MCC = matthews_correlation(true_pos_sum[i], true_neg_sum[i], false_pos_sum[i], false_neg_sum[i])
+for i in range(7):
+    indices = np.where(np.array(synapse_type) == i)
+    MCC = matthews_correlation(np.sum(true_pos_sum[indices]), np.sum(true_neg_sum[indices]), np.sum(false_pos_sum[indices]), np.sum(false_neg_sum[indices]))
+    accuracy = np.append(accuracy, MCC)
+    accuracy_types[i] += MCC
 
+for i in range(parameters.primitive['n']):
     plt.scatter(safe_divide(false_pos_sum[i], false_pos_sum[i] + true_neg_sum[i]),
                 safe_divide(true_pos_sum[i], true_pos_sum[i] + false_neg_sum[i]),
                 color=parameters.general['colors'][synapse_type[i]], s=8,
                 marker=parameters.general['markers'][synapse_type[i]], zorder=2)
-
-    accuracy = np.append(accuracy, MCC)
-    accuracy_types[synapse_type[i]] += MCC / N_types[synapse_type[i]]
 
 for i in range(len(LEGEND_LABELS)):
     plt.scatter(100, 100, color=parameters.general['colors'][i], s=13,
