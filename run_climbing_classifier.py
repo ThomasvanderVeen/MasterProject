@@ -2,13 +2,14 @@ from class_primitive_neuron import LIF_primitive
 from dictionaries import Parameters
 from plots import *
 
-parameters = Parameters(t_total=5, dt=0.001)
-N_simulations = 2
+parameters = Parameters(t_total=25, dt=0.001)
+N_simulations = 9
 N_simulations_test = 2
 N_plot = 1
 n_bins = 50
-w_1_list = np.linspace(0.25E-4, 1E-4, num=3)
-w_2_list = np.linspace(0E-3, -1E-4, num=2)
+w_1_list = np.linspace(0.85E-4, 0.85E-4, num=1)
+w_2_list = np.linspace(-0.4E-4, -0.4E-4, num=1)
+
 
 data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
@@ -28,7 +29,7 @@ for l, m in itertools.product(range(w_2_list.size), range(w_1_list.size)):
             spike_train = spike_primitive[:, j]
             incidence = spike_train * pitch[:, i]
             incidence[incidence == 0] = np.nan
-            incidence_binned += np.histogram(incidence, bins=2, range=(pitch_min, pitch_max))[0]
+            incidence_binned += np.histogram(incidence, bins=2, range=(-180, 200))[0]
 
         ratio = incidence_binned[1] / incidence_binned[0]
 
@@ -49,7 +50,7 @@ for l, m in itertools.product(range(w_2_list.size), range(w_1_list.size)):
         for i in range(parameters.general['N_steps']):
             _, spike_posture[i, j] = posture_neuron.forward(torch.from_numpy(spike_primitive[i, :]))
 
-    pitch_binary[pitch > pitch_middle] = 1
+    pitch_binary[pitch > 10] = 1
     pitch_binned = convert_to_bins(pitch_binary, n_bins)
     spike_posture_binned = convert_to_bins(spike_posture, n_bins)
     spike_posture_binned_list.append(spike_posture_binned), spike_posture_list.append(spike_posture)
@@ -64,14 +65,27 @@ for l, m in itertools.product(range(w_2_list.size), range(w_1_list.size)):
 
     MCC = matthews_correlation(true_positive, true_negative, false_positive, false_negative)
 
+
     TPR = true_positive / (true_positive + false_negative)
     FPR = false_positive / (false_positive + true_negative)
     TNR = true_negative / (true_negative + false_positive)
 
     ACC = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
     ACC_balanced = (TPR + TNR) / 2
+    print(true_positive, true_negative, false_positive, false_negative)
+    print(MCC, ACC, ACC_balanced)
 
     accuracy_list[l, m] = MCC
+
+
+indices_up = np.where(parameters.posture['w'] > 0)
+
+
+neuron_indices_up, legs_up = get_indexes_legs(indices_up[0])
+
+
+print(np.bincount(legs_up))
+
 
 max_index = np.where(np.ndarray.flatten(accuracy_list) == np.max(accuracy_list))
 spike_posture, spike_posture_binned = spike_posture_list[max_index[0][0]], spike_posture_binned_list[max_index[0][0]]
@@ -89,10 +103,10 @@ plot_climbing_accuracy(fig, ax, 'climbing')
 fig, ax = plt.subplots(figsize=(1.5 * 3.54, 3.54), dpi=600)
 
 ax.plot(time, pitch[:, N_simulations + N_plot], color='black', label='body pitch')
-ax.plot([time[0], time[-1]], [pitch_middle, pitch_middle], linestyle='dotted', color='red')
+ax.plot([time[0], time[-1]], [10, 10], linestyle='dotted', color='black')
 
 spike_posture[spike_posture == 0] = np.nan
-x = np.linspace(0, 20, num=n_bins)
+x = np.linspace(0, 25, num=n_bins)
 x_dist = x[1] - x[0]
 
 ax.scatter(time, pitch[:, N_simulations + N_plot] * spike_posture[:, N_plot], color='blue', marker='^')

@@ -6,14 +6,16 @@ from class_primitive_neuron import LIF_primitive
 from dictionaries import Parameters
 from functions import *
 
-N_SIMULATIONS = 2
+N_SIMULATIONS = 9
 N_SIMULATIONS_TEST = 2
 N_PLOT = 2
 N_SKIP = 100 #Try with N_SKIP = 1
 
-w_1_list = np.linspace(0.1E-3, 20E-3, num=2)
-ratios = np.linspace(1.3, 1.7, num=2)
-parameters = Parameters(t_total=5, dt=0.001)
+w_1_list = np.linspace(7.2E-3, 7.2E-3, num=1)
+ratios = np.linspace(3.06, 3.06, num=1)
+parameters = Parameters(t_total=25, dt=0.001)
+
+print(w_1_list)
 
 data = pickle_open('Data/simulation_data')
 primitive_list = pickle_open('Data/primitive_list')
@@ -23,6 +25,9 @@ time = np.linspace(0, parameters.general['t_total'], num=parameters.general['N_s
 spike_posture_list, spike_posture_binned_list = [], []
 euclidean_norm = lambda x, y: np.abs(x - y)
 perm, synapse_type, _, _, _, _, _ = get_encoding()
+
+d_noises = np.zeros(5)
+N = ratios.size * w_1_list.size * N_SIMULATIONS_TEST
 
 for l, m in itertools.product(range(ratios.size), range(w_1_list.size)):
     weights = np.zeros((672, 2))
@@ -35,7 +40,7 @@ for l, m in itertools.product(range(ratios.size), range(w_1_list.size)):
             spike_train = spike_primitive[:, j]
             incidence = spike_train * pitch[:, i]
             incidence[incidence == 0] = np.nan
-            incidence_binned += np.histogram(incidence, bins=2, range=(pitch_min, pitch_max))[0]
+            incidence_binned += np.histogram(incidence, bins=2, range=(-180, 200))[0]
 
         ratio = incidence_binned[1] / incidence_binned[0]
 
@@ -64,29 +69,31 @@ for l, m in itertools.product(range(ratios.size), range(w_1_list.size)):
             np.convolve(zscore.zscore(firing_rate), np.ones(3000) / 3000, mode='same') - zscore.zscore(
                 pitch[:, j + N_SIMULATIONS])))
 
-        d, _, _, _ = dtw(zscore.zscore(firing_rate)[::N_SKIP], zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+        d, _, _, _ = dtw(np.convolve(zscore.zscore(firing_rate), np.ones(3000) / 3000, mode='same')[::N_SKIP], zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
                          dist=euclidean_norm)
         accuracy_list[l, m] += d / N_SIMULATIONS_TEST
 
-        '''
-        print(d)
 
-        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.1, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+
+
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.27, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
                          dist=euclidean_norm)
-        print(d, 0.1)
-        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.2, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+        d_noises[0] += d
+
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.29, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
                          dist=euclidean_norm)
-        print(d, 0.2)
-        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.3, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+        d_noises[1] += d
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.31, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
                          dist=euclidean_norm)
-        print(d, 0.3)
-        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.45, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+        d_noises[2] += d
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.33, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
                          dist=euclidean_norm)
-        print(d, 0.45)
-        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 1, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
+        d_noises[3] += d
+        d, _, _, _ = dtw(zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 0.35, size=250), zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP],
                          dist=euclidean_norm)
-        print(d, 1)
-        '''
+        d_noises[4] += d
+
+
 
         # plt.plot(time[::N_SKIP], zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP]+np.random.normal(0, 1, size=pitch[:, j + N_SIMULATIONS][::N_SKIP].shape))
         # plt.plot(time[::N_SKIP], zscore.zscore(pitch[:, j + N_SIMULATIONS])[::N_SKIP])
@@ -105,11 +112,13 @@ print(perm[neuron_indices_up])
 print(np.bincount(legs_up))
 print(np.bincount(legs_down))
 
+print(d_noises/N)
+
 #print(np.around(100 * np.bincount(np.array(synapse_type)[neuron_indices_up]) / np.bincount(np.array(synapse_type)), 3))
 #print(
 #    np.around(100 * np.bincount(np.array(synapse_type)[neuron_indices_down]) / np.bincount(np.array(synapse_type)), 3))
 
-'''
+"""
 print('neurons up')
 for i in range(neuron_indices_up.size):
     print(neuron_indices_up[i], legs_up[i], perm[neuron_indices_up[i]])
@@ -117,7 +126,7 @@ for i in range(neuron_indices_up.size):
 print('neurons down')
 for i in range(neuron_indices_down.size):
     print(neuron_indices_down[i], legs_down[i], perm[neuron_indices_down[i]])
-'''
+"""
 
 accuracy_list[accuracy_list == np.nan] = 0
 min_index = np.where(np.ndarray.flatten(accuracy_list) == np.min(accuracy_list))

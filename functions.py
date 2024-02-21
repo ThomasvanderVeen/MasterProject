@@ -143,7 +143,7 @@ def get_encoding(w_pos=[0, 0, 0, 0, 0, 0, 0], w_vel=[0, 0, 0, 0, 0, 0, 0], n=6):
     return perm, synapse_type, weights, negative_mask, positive_mask, final_perm, base_perm.astype(int)
 
 
-def convert_to_bins(old_array, n_bins, minimum=1, sum_bool=False):
+def convert_to_bins(old_array, n_bins, minimum=0, sum_bool=False):
     old_array = np.transpose(old_array)
 
     while old_array.shape[1] != n_bins:

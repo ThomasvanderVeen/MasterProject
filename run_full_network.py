@@ -12,9 +12,9 @@ from functions import *
 
 VEL = 2
 N_LEGS = 6
-N_SIMULATIONS = 1
-W_POS = [16e-3, 0, 16e-3, 16e-3, 16e-3, 8e-3, 0e-3]
-W_VEL = [0e-3, 12e-3, 10e-3, 4e-3, 4e-3, 0e-3, 10e-3]
+N_SIMULATIONS = 11
+W_POS = [16.5e-3, 0, 16.5e-3, 15e-3, 16.5e-3, 9e-3, 0e-3]
+W_VEL = [0e-3, 10.5e-3, 12e-3, 3e-3, 7.5e-3, 0e-3, 10e-3]
 
 permutations_name, synapse_type, weights_primitive, primitive_filter_2, primitive_filter, permutations, base_perm = \
     get_encoding(W_POS, W_VEL, N_LEGS)
@@ -31,7 +31,7 @@ for k in tqdm(range(N_SIMULATIONS), desc='Network progress'):
         max_joint_angle=np.amax(joint_angles, axis=0),
         min_joint_angle=np.amin(joint_angles, axis=0),
         n_hairs=50,
-        t_total=10,
+        t_total=25,
         dt=0.001,
         n_angles=18
     )
@@ -217,10 +217,10 @@ for k in tqdm(range(N_SIMULATIONS), desc='ROC plot progress'):
 
     for i in range(N_joints):
         mid = np.max(joint_angles[:, i]) / 2 + np.min(joint_angles[:, i]) / 2
-        diff = np.diff(joint_angles[:, i])
+        diff = np.diff(joint_angles[:, i])/parameters.general['dt']
 
-        ground_vel[np.where(diff < 0), 0 + 2 * i] = 1
-        ground_vel[np.where(diff > 0), 1 + 2 * i] = 1
+        ground_vel[np.where(diff < -10), 0 + 2 * i] = 1
+        ground_vel[np.where(diff > 10), 1 + 2 * i] = 1
         ground_pos[np.where(joint_angles[:, i] < mid), 0 + 2 * i] = 1
         ground_pos[np.where(joint_angles[:, i] > mid), 1 + 2 * i] = 1
 
@@ -404,6 +404,8 @@ swings_min = swings_average - np.percentile(swings, 10, axis=3)
 swings_std = np.std(swings, axis=3)
 swings_25 = np.percentile(swings, 25, axis=3)
 swings_75 = np.percentile(swings, 75, axis=3)
+
+pickle_save(swings, 'Data/swings')
 
 x = [0, 1, 2, 3, 6, 7, 8, 9, 12, 13, 14, 15]
 LEGS = ['R1', 'R2', 'R3', 'L1', 'L2', 'L3']

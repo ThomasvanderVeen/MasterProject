@@ -251,12 +251,12 @@ def plot_climbing_accuracy(fig, ax, name):
     fig.tight_layout(pad=0.5)
     if name == 'climbing':
         ax.set_ylabel('Matthews correlation')
-        ax.set_xlabel('w_exc (mV)')
+        ax.set_xlabel(r'$\omega_{exc}$ (mV)')
         fig.savefig('Images/climbing_accuracy.png', bbox_inches='tight')
         fig.savefig('Images/climbing_accuracy.pdf', bbox_inches='tight')
     elif name == 'pitch':
         ax.set_ylabel('DTW score')
-        ax.set_xlabel('w_up (mV)')
+        ax.set_xlabel(r'$\omega_{up}$ (mV)')
         fig.savefig('Images/pitch_accuracy.png', bbox_inches='tight')
         fig.savefig('Images/pitch_accuracy.pdf', bbox_inches='tight')
 
